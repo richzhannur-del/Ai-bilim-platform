@@ -1,262 +1,693 @@
 <!DOCTYPE html>
 <html lang="kk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Мұғалім кабинеті — AI-BILIM</title>
+<title>AI-BILIM | Мұғалім кабинеті</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  background:#f8f6f2;
+  color:#172033;
+}
+.layout{display:flex;min-height:100vh}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f3f6fa;
-      color: #0f172a;
-    }
+/* SIDEBAR */
+.sidebar{
+  width:250px;
+  background:#fffdf9;
+  border-right:1px solid #e8e1d7;
+  padding:25px 18px;
+  position:fixed;
+  top:0;bottom:0;left:0;
+}
+.logo{
+  font-family:Georgia,serif;
+  font-size:27px;
+  font-weight:700;
+  color:#16213a;
+  margin:4px 10px 4px;
+}
+.logo-sub{
+  margin:0 10px 35px;
+  color:#7d7469;
+  font-size:13px;
+}
+.menu a{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:13px 15px;
+  margin:5px 0;
+  text-decoration:none;
+  color:#293247;
+  border-radius:9px;
+  font-size:15px;
+}
+.menu a:hover{background:#f4eee5}
+.menu a.active{
+  background:#a96f24;
+  color:white;
+}
+.icon{width:22px;text-align:center}
+.separator{
+  border-top:1px solid #e8e1d7;
+  margin:22px 5px;
+}
+.sidebar-bottom{
+  position:absolute;
+  bottom:25px;
+  left:28px;
+  right:28px;
+  font-size:12px;
+  color:#958b7f;
+  line-height:1.6;
+}
 
-    header {
-      height: 70px;
-      background: white;
-      border-bottom: 1px solid #dbe2ea;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 5%;
-    }
+/* MAIN */
+.main{
+  margin-left:250px;
+  width:calc(100% - 250px);
+}
+.topbar{
+  height:75px;
+  background:#fff;
+  border-bottom:1px solid #eee8df;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 35px;
+}
+.search{
+  width:48%;
+  padding:13px 18px;
+  border:1px solid #e2ddd5;
+  border-radius:10px;
+  background:#fafafa;
+  font-size:14px;
+}
+.profile{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.avatar{
+  width:42px;height:42px;
+  border-radius:50%;
+  background:#a96f24;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+}
+.logout{
+  border:0;
+  background:none;
+  cursor:pointer;
+  color:#806b52;
+}
 
-    .logo {
-      font-size: 22px;
-      font-weight: 700;
-    }
+/* CONTENT */
+.content{
+  max-width:1400px;
+  margin:auto;
+  padding:22px 30px 45px;
+}
 
-    .logout {
-      border: none;
-      background: transparent;
-      font-size: 16px;
-      cursor: pointer;
-    }
+/* HERO */
+.hero{
+  min-height:190px;
+  border-radius:16px;
+  padding:35px;
+  background:
+    linear-gradient(90deg,#f3eadf 0%,#f8f4ed 60%,#e7d5bf 100%);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.hero h1{
+  font-family:Georgia,serif;
+  font-size:38px;
+  margin:0 0 12px;
+  color:#172039;
+}
+.hero p{
+  color:#6d665f;
+  font-size:17px;
+  max-width:650px;
+  line-height:1.6;
+}
+.quote{
+  background:rgba(255,255,255,.72);
+  width:260px;
+  padding:22px;
+  border-radius:13px;
+  line-height:1.5;
+  font-family:Georgia,serif;
+}
 
-    .logout:hover {
-      color: #059669;
-    }
+/* STATS */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin:16px 0;
+}
+.stat{
+  background:#fff;
+  border:1px solid #ece6dd;
+  border-radius:13px;
+  padding:20px;
+}
+.stat-number{
+  font-family:Georgia,serif;
+  font-size:29px;
+  font-weight:700;
+  margin-bottom:5px;
+}
+.stat-label{color:#766d63;font-size:14px}
 
-    main {
-      max-width: 1260px;
-      margin: 0 auto;
-      padding: 70px 25px;
-    }
+/* AI WORKSHOP */
+.workshop{
+  background:white;
+  border:1px solid #ece6dd;
+  border-radius:14px;
+  padding:22px;
+}
+.workshop-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.workshop h2{
+  font-family:Georgia,serif;
+  margin:0 0 5px;
+  font-size:25px;
+}
+.workshop-sub{
+  color:#7d7469;
+  margin-bottom:20px;
+}
+.ai-form{
+  display:grid;
+  grid-template-columns:1.2fr .7fr 1.8fr 1fr auto;
+  gap:10px;
+}
+.ai-form input,.ai-form select{
+  padding:12px;
+  border:1px solid #ddd7ce;
+  border-radius:8px;
+  background:#fff;
+}
+.create-btn{
+  border:0;
+  border-radius:8px;
+  padding:0 25px;
+  background:#13795b;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+.create-btn:hover{background:#0e654a}
 
-    h1 {
-      font-size: 40px;
-      margin: 0 0 20px;
-    }
+.resource-types{
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:8px;
+  margin-top:14px;
+}
+.resource{
+  padding:15px 5px;
+  text-align:center;
+  border:1px solid #e7e1d8;
+  border-radius:9px;
+  font-size:13px;
+  background:#fff;
+  cursor:pointer;
+}
+.resource:hover{
+  border-color:#a96f24;
+  background:#fffaf3;
+}
 
-    #welcome {
-      font-size: 20px;
-      margin-bottom: 20px;
-    }
+/* LOWER GRID */
+.lower{
+  display:grid;
+  grid-template-columns:1fr 1.15fr .9fr;
+  gap:14px;
+  margin-top:16px;
+}
+.panel{
+  background:#fff;
+  border:1px solid #ece6dd;
+  border-radius:13px;
+  padding:20px;
+}
+.panel h3{
+  margin:0 0 18px;
+  font-family:Georgia,serif;
+}
+.row{
+  padding:12px 0;
+  border-bottom:1px solid #eee9e2;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.row:last-child{border:0}
+.class-circle{
+  width:36px;height:36px;
+  background:#e7f5ee;
+  color:#13795b;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-right:10px;
+  font-weight:700;
+}
+.empty{
+  color:#978d82;
+  padding:20px 0;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 22px;
-      margin-top: 20px;
-    }
+/* MOBILE */
+.mobile-menu{display:none}
 
-    .tile {
-      background: white;
-      min-height: 230px;
-      border-radius: 24px;
-      padding: 32px;
-      text-decoration: none;
-      color: inherit;
-      display: block;
-      border: 2px solid transparent;
-      transition: 0.2s;
-      cursor: pointer;
-    }
-
-    .tile:hover {
-      transform: translateY(-5px);
-      border-color: #10b981;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-    }
-
-    .tile h3 {
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-
-    .tile p {
-      font-size: 18px;
-      line-height: 1.4;
-    }
-
-    @media (max-width: 1000px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 600px) {
-      main {
-        padding: 35px 18px;
-      }
-
-      h1 {
-        font-size: 30px;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .tile {
-        min-height: 170px;
-      }
-    }
-  </style>
+@media(max-width:1050px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .resource-types{grid-template-columns:repeat(4,1fr)}
+  .ai-form{grid-template-columns:1fr 1fr}
+  .lower{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .sidebar{display:none}
+  .main{margin-left:0;width:100%}
+  .topbar{padding:0 15px}
+  .search{width:60%}
+  .content{padding:15px}
+  .hero{padding:25px}
+  .hero h1{font-size:29px}
+  .quote{display:none}
+  .stats{grid-template-columns:1fr 1fr}
+  .resource-types{grid-template-columns:repeat(2,1fr)}
+  .ai-form{grid-template-columns:1fr}
+  .create-btn{padding:13px}
+}
+</style>
 </head>
 
 <body>
 
-<header>
+<div class="layout">
+
+<aside class="sidebar">
+
   <div class="logo">AI-BILIM</div>
-  <button class="logout" id="logoutBtn">Шығу</button>
+  <div class="logo-sub">Мұғалім кабинеті</div>
+
+  <nav class="menu">
+    <a class="active" href="dashboard.html"><span class="icon">⌂</span> Басты бет</a>
+    <a href="classes.html"><span class="icon">◉</span> Менің сыныптарым</a>
+    <a href="#" id="workshopMenu"><span class="icon">✦</span> ЖИ-Шеберхана</a>
+    <a href="#"><span class="icon">▣</span> Тапсырмалар</a>
+    <a href="#"><span class="icon">□</span> Ресурстар</a>
+    <a href="#"><span class="icon">⌁</span> Нәтижелер</a>
+    <a href="#"><span class="icon">▥</span> AI Аналитика</a>
+    <a href="#"><span class="icon">◎</span> Оқушылар</a>
+
+    <div class="separator"></div>
+
+    <a href="#"><span class="icon">○</span> Профиль</a>
+    <a href="#"><span class="icon">⚙</span> Баптаулар</a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    AI-BILIM<br>
+    Мұғалімнің кәсіби цифрлық кеңістігі
+  </div>
+
+</aside>
+
+
+<div class="main">
+
+<header class="topbar">
+
+  <input class="search"
+         placeholder="Сабақ тақырыбы, ресурс, сыныпты іздеу...">
+
+  <div class="profile">
+    <div class="avatar" id="avatar">М</div>
+
+    <div>
+      <strong id="teacherName">Мұғалім</strong><br>
+      <small>AI-BILIM</small>
+    </div>
+
+    <button class="logout" id="logoutBtn">Шығу</button>
+  </div>
+
 </header>
 
-<main>
 
-  <h1>Мұғалім кабинеті</h1>
+<main class="content">
 
-  <p id="welcome">Қош келдіңіз!</p>
+<section class="hero">
 
-  <section class="grid">
+  <div>
+    <h1 id="greeting">Қайырлы күн!</h1>
 
-    <a href="classes.html" class="tile">
-      <h3>🏫 Менің сыныптарым</h3>
-      <p>
-        Сынып құру және оқушыларды қосу.
-      </p>
-    </a>
+    <p>
+      AI-BILIM — мұғалімнің кәсіби дамуы мен
+      оқушылардың табысты болашағы үшін.
+    </p>
+  </div>
 
-    <div class="tile" id="aiWorkshop">
-      <h3>🤖 ЖИ-Шеберхана</h3>
-      <p>
-        ҚМЖ, презентация, PISA, A/B/C және басқа ресурстар.
-      </p>
+  <div class="quote">
+    «Заманауи мұғалім — технологияны шебер пайдаланып,
+    болашақты қалыптастыратын кәсіби тұлға.»
+  </div>
+
+</section>
+
+
+<section class="stats">
+
+  <div class="stat">
+    <div class="stat-number" id="classCount">0</div>
+    <div class="stat-label">Сынып</div>
+  </div>
+
+  <div class="stat">
+    <div class="stat-number" id="studentCount">0</div>
+    <div class="stat-label">Оқушы</div>
+  </div>
+
+  <div class="stat">
+    <div class="stat-number">0</div>
+    <div class="stat-label">Берілген тапсырма</div>
+  </div>
+
+  <div class="stat">
+    <div class="stat-number">—</div>
+    <div class="stat-label">Орташа нәтиже</div>
+  </div>
+
+</section>
+
+
+<section class="workshop" id="workshop">
+
+  <div class="workshop-header">
+    <div>
+      <h2>ЖИ-Шеберхана</h2>
+      <div class="workshop-sub">
+        Сабаққа қажетті материалдарды жасанды интеллект көмегімен жасаңыз.
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-form">
+
+    <select id="subject">
+      <option value="">Пәнді таңдаңыз</option>
+      <option>Қазақ тілі</option>
+      <option>Қазақ әдебиеті</option>
+      <option>Информатика</option>
+      <option>Математика</option>
+      <option>Қазақстан тарихы</option>
+      <option>Дүниежүзі тарихы</option>
+      <option>Биология</option>
+      <option>Химия</option>
+      <option>Физика</option>
+      <option>География</option>
+      <option>Ағылшын тілі</option>
+    </select>
+
+    <select id="grade">
+      <option value="">Сынып</option>
+      <option>1</option><option>2</option><option>3</option>
+      <option>4</option><option>5</option><option>6</option>
+      <option>7</option><option>8</option><option>9</option>
+      <option>10</option><option>11</option>
+    </select>
+
+    <input id="topic" placeholder="Сабақ тақырыбын енгізіңіз...">
+
+    <select id="resourceType">
+      <option value="">Ресурс түрі</option>
+      <option>ҚМЖ</option>
+      <option>Презентация</option>
+      <option>Деңгейлік тапсырма</option>
+      <option>PISA</option>
+      <option>Тест</option>
+      <option>Инфографика</option>
+      <option>Комикс</option>
+      <option>Интерактивті тапсырма</option>
+    </select>
+
+    <button class="create-btn" id="createBtn">
+      ✦ Жасау →
+    </button>
+
+  </div>
+
+
+  <div class="resource-types">
+
+    <div class="resource" data-type="ҚМЖ">ҚМЖ</div>
+    <div class="resource" data-type="Презентация">Презентация</div>
+    <div class="resource" data-type="Деңгейлік тапсырма">Деңгейлік тапсырма</div>
+    <div class="resource" data-type="PISA">PISA</div>
+    <div class="resource" data-type="Тест">Тест</div>
+    <div class="resource" data-type="Инфографика">Инфографика</div>
+    <div class="resource" data-type="Комикс">Комикс</div>
+    <div class="resource" data-type="Интерактивті тапсырма">Интерактивті тапсырма</div>
+
+  </div>
+
+</section>
+
+
+<section class="lower">
+
+  <div class="panel">
+
+    <h3>Соңғы сыныптар</h3>
+
+    <div id="classList">
+      <div class="empty">Әзірге сынып жоқ.</div>
     </div>
 
-    <div class="tile" id="resources">
-      <h3>📚 Менің ресурстарым</h3>
-      <p>
-        Жасалған материалдарды сақтау.
-      </p>
+  </div>
+
+
+  <div class="panel">
+
+    <h3>Соңғы ресурстар</h3>
+
+    <div class="empty">
+      Жасалған ресурстар осы жерде көрсетіледі.
     </div>
 
-    <div class="tile" id="results">
-      <h3>📊 Нәтижелер</h3>
-      <p>
-        Оқушы прогресін талдау.
-      </p>
+  </div>
+
+
+  <div class="panel">
+
+    <h3>Апталық белсенділік</h3>
+
+    <div class="empty">
+      Аналитика деректері жиналғаннан кейін осы жерде көрсетіледі.
     </div>
 
-  </section>
+  </div>
+
+</section>
 
 </main>
+</div>
+</div>
 
 
 <script type="module">
 
-  import { supabase } from "../js/config.js";
+import { supabase } from "../js/config.js";
 
-  // -------------------------------
-  // Пайдаланушыны тексеру
-  // -------------------------------
+let currentUser = null;
+
+
+// Авторизация
+async function init(){
 
   const {
-    data: { user }
+    data:{user},
+    error
   } = await supabase.auth.getUser();
 
-  if (!user) {
-
-    window.location.href = "../login.html";
-
-  } else {
-
-    // -------------------------------
-    // Мұғалім профилін алу
-    // -------------------------------
-
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("full_name, role")
-      .eq("id", user.id)
-      .single();
-
-    if (!error && profile) {
-
-      document.getElementById("welcome").textContent =
-        "Қош келдіңіз, " + profile.full_name + "!";
-
-      // Мұғалім емес болса
-      if (profile.role !== "teacher") {
-        window.location.href = "../student/dashboard.html";
-      }
-
-    }
-
+  if(error || !user){
+    window.location.href="../login.html";
+    return;
   }
 
+  currentUser=user;
 
-  // -------------------------------
-  // Шығу
-  // -------------------------------
+  await loadProfile();
+  await loadClasses();
 
-  document
-    .getElementById("logoutBtn")
-    .addEventListener("click", async () => {
-
-      await supabase.auth.signOut();
-
-      window.location.href = "../login.html";
-
-    });
+}
 
 
-  // -------------------------------
-  // Келесі бөлімдер
-  // -------------------------------
+// Мұғалім профилі
+async function loadProfile(){
 
-  document
-    .getElementById("aiWorkshop")
-    .addEventListener("click", () => {
+  const {data:profile} = await supabase
+    .from("profiles")
+    .select("full_name, role")
+    .eq("id",currentUser.id)
+    .maybeSingle();
 
-      alert("ЖИ-Шеберхана келесі кезеңде қосылады.");
+  const name =
+    profile?.full_name ||
+    currentUser.user_metadata?.full_name ||
+    "Мұғалім";
 
-    });
+  document.getElementById("teacherName").textContent=name;
+
+  document.getElementById("greeting").textContent=
+    "Қайырлы күн, "+name+"!";
+
+  document.getElementById("avatar").textContent=
+    name.charAt(0).toUpperCase();
+
+}
 
 
-  document
-    .getElementById("resources")
-    .addEventListener("click", () => {
+// Сыныптарды Supabase-тен алу
+async function loadClasses(){
 
-      alert("Менің ресурстарым бөлімі келесі кезеңде қосылады.");
+  const {data,error}=await supabase
+    .from("classes")
+    .select("*")
+    .eq("teacher_id",currentUser.id)
+    .order("created_at",{ascending:false});
 
-    });
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  document.getElementById("classCount").textContent=
+    data?.length || 0;
+
+  const box=document.getElementById("classList");
+
+  if(!data || data.length===0){
+    box.innerHTML=
+      '<div class="empty">Әзірге сынып жоқ. «Менің сыныптарым» бөлімінен жаңа сынып құрыңыз.</div>';
+    return;
+  }
+
+  box.innerHTML="";
+
+  data.slice(0,4).forEach(item=>{
+
+    const row=document.createElement("div");
+    row.className="row";
+
+    const left=document.createElement("div");
+
+    const circle=document.createElement("span");
+    circle.className="class-circle";
+    circle.textContent=(item.name || "С").substring(0,2);
+
+    const name=document.createElement("strong");
+    name.textContent=item.name || "Сынып";
+
+    left.append(circle,name);
+
+    const subject=document.createElement("small");
+    subject.textContent=item.subject || "";
+
+    row.append(left,subject);
+
+    box.appendChild(row);
+
+  });
+
+}
 
 
-  document
-    .getElementById("results")
-    .addEventListener("click", () => {
+// Ресурс түрін басу
+document.querySelectorAll(".resource").forEach(item=>{
 
-      alert("Нәтижелер бөлімі келесі кезеңде қосылады.");
+  item.addEventListener("click",()=>{
 
-    });
+    document.getElementById("resourceType").value=
+      item.dataset.type;
+
+  });
+
+});
+
+
+// ЖИ шеберхана мәзірі
+document.getElementById("workshopMenu")
+.addEventListener("click",(e)=>{
+
+  e.preventDefault();
+
+  document.getElementById("workshop")
+    .scrollIntoView({behavior:"smooth"});
+
+});
+
+
+// Жасау
+document.getElementById("createBtn")
+.addEventListener("click",()=>{
+
+  const subject=document.getElementById("subject").value;
+  const grade=document.getElementById("grade").value;
+  const topic=document.getElementById("topic").value.trim();
+  const type=document.getElementById("resourceType").value;
+
+  if(!subject || !grade || !topic || !type){
+
+    alert(
+      "Пәнді, сыныпты, тақырыпты және ресурс түрін толтырыңыз."
+    );
+
+    return;
+  }
+
+  alert(
+    "Келесі кезеңде ЖИ осы сұраныс бойынша «"+
+    type+
+    "» ресурсын автоматты түрде жасайды."
+  );
+
+});
+
+
+// Шығу
+document.getElementById("logoutBtn")
+.addEventListener("click",async()=>{
+
+  await supabase.auth.signOut();
+
+  window.location.href="../login.html";
+
+});
+
+
+init();
 
 </script>
 
