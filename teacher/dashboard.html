@@ -121,14 +121,27 @@ body{
 
 /* HERO */
 .hero{
-  min-height:190px;
-  border-radius:16px;
-  padding:35px;
-  background:
-    linear-gradient(90deg,#f3eadf 0%,#f8f4ed 60%,#e7d5bf 100%);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+    min-height:300px;
+    border-radius:16px;
+    padding:35px;
+    background-image:
+      linear-gradient(
+        90deg,
+        rgba(255,255,255,0.94) 0%,
+        rgba(255,255,255,0.78) 32%,
+        rgba(255,255,255,0.18) 58%,
+        rgba(255,255,255,0.02) 100%
+      ),
+      url("../images/teacher-hero.png");
+
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    overflow:hidden;
 }
 .hero h1{
   font-family:Georgia,serif;
