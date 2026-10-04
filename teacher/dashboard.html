@@ -516,9 +516,7 @@ body{
 </div>
 
 
-<script type="module">
-
-import { supabase } from "../js/config.js";
+<script >
 
 let currentUser = null;
 
@@ -529,7 +527,7 @@ async function init(){
   const {
     data:{user},
     error
-  } = await supabase.auth.getUser();
+  } = await sb.auth.getUser();
 
   if(error || !user){
     window.location.href="../login.html";
@@ -547,32 +545,51 @@ async function init(){
 // Мұғалім профилі
 async function loadProfile(){
 
-  const {data:profile} = await supabase
+  const {data:profile} = await sb
     .from("profiles")
     .select("full_name, role")
     .eq("id",currentUser.id)
     .maybeSingle();
 
-  const name =
-    profile?.full_name ||
-    currentUser.user_metadata?.full_name ||
-    "Мұғалім";
+  const fullName =
+  profile?.full_name ||
+  currentUser.user_metadata?.full_name ||
+  "Мұғалім";
 
-  document.getElementById("teacherName").textContent=name;
+// Толық аты-жөнінен мұғалімнің атын алу
+let firstName = fullName;
 
-  document.getElementById("greeting").textContent=
-    "Қайырлы күн, "+name+"!";
+const parts = fullName.trim().split(/\s+/);
 
-  document.getElementById("avatar").textContent=
-    name.charAt(0).toUpperCase();
-
+if (parts.length >= 2) {
+  firstName = parts[1];
 }
 
+// УЛЖАН → Ұлжан түріне келтіру
+firstName =
+  firstName.charAt(0).toUpperCase() +
+  firstName.slice(1).toLowerCase();
 
-// Сыныптарды Supabase-тен алу
+// Қазақша Ұ әрпін дұрыстау
+if (firstName.toLowerCase() === "улжан") {
+  firstName = "Ұлжан";
+}
+
+document.getElementById("teacherName").textContent = firstName;
+
+document.getElementById("greeting").textContent =
+  "Қайырлы күн, " + firstName + "!";
+
+document.getElementById("avatar").textContent =
+  firstName.charAt(0).toUpperCase();
+
+ }
+
+
+// Сыныптарды Sb-тен алу
 async function loadClasses(){
 
-  const {data,error}=await supabase
+  const {data,error}=await sb
     .from("classes")
     .select("*")
     .eq("teacher_id",currentUser.id)
@@ -680,7 +697,7 @@ document.getElementById("createBtn")
 document.getElementById("logoutBtn")
 .addEventListener("click",async()=>{
 
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
 
   window.location.href="../login.html";
 
