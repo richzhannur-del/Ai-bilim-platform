@@ -1,1 +1,264 @@
-<!doctype html><html lang="kk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Мұғалім — AI-BILIM</title><link rel="stylesheet" href="../css/style.css"></head><body><header class="top"><b>AI-BILIM</b><button class="linkbtn" onclick="logout()">Шығу</button></header><main class="dashboard"><h1>Мұғалім кабинеті</h1><p id="welcome">Қош келдіңіз!</p><section class="grid"><div class="tile"><h3>🏫 Менің сыныптарым</h3><p>Сынып құру және оқушыларды қосу.</p></div><div class="tile"><h3>🤖 ЖИ-Шеберхана</h3><p>ҚМЖ, презентация, PISA, A/B/C және басқа ресурстар.</p></div><div class="tile"><h3>📚 Менің ресурстарым</h3><p>Жасалған материалдарды сақтау.</p></div><div class="tile"><h3>📊 Нәтижелер</h3><p>Оқушы прогресін талдау.</p></div></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/auth.js"></script><script>protectPage('teacher');</script></body></html>
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Мұғалім кабинеті — AI-BILIM</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fa;
+      color: #0f172a;
+    }
+
+    header {
+      height: 70px;
+      background: white;
+      border-bottom: 1px solid #dbe2ea;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .logout {
+      border: none;
+      background: transparent;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      color: #059669;
+    }
+
+    main {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 70px 25px;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin: 0 0 20px;
+    }
+
+    #welcome {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+      margin-top: 20px;
+    }
+
+    .tile {
+      background: white;
+      min-height: 230px;
+      border-radius: 24px;
+      padding: 32px;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      border: 2px solid transparent;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .tile:hover {
+      transform: translateY(-5px);
+      border-color: #10b981;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+    }
+
+    .tile h3 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .tile p {
+      font-size: 18px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 1000px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      main {
+        padding: 35px 18px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tile {
+        min-height: 170px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">AI-BILIM</div>
+  <button class="logout" id="logoutBtn">Шығу</button>
+</header>
+
+<main>
+
+  <h1>Мұғалім кабинеті</h1>
+
+  <p id="welcome">Қош келдіңіз!</p>
+
+  <section class="grid">
+
+    <a href="classes.html" class="tile">
+      <h3>🏫 Менің сыныптарым</h3>
+      <p>
+        Сынып құру және оқушыларды қосу.
+      </p>
+    </a>
+
+    <div class="tile" id="aiWorkshop">
+      <h3>🤖 ЖИ-Шеберхана</h3>
+      <p>
+        ҚМЖ, презентация, PISA, A/B/C және басқа ресурстар.
+      </p>
+    </div>
+
+    <div class="tile" id="resources">
+      <h3>📚 Менің ресурстарым</h3>
+      <p>
+        Жасалған материалдарды сақтау.
+      </p>
+    </div>
+
+    <div class="tile" id="results">
+      <h3>📊 Нәтижелер</h3>
+      <p>
+        Оқушы прогресін талдау.
+      </p>
+    </div>
+
+  </section>
+
+</main>
+
+
+<script type="module">
+
+  import { supabase } from "../js/config.js";
+
+  // -------------------------------
+  // Пайдаланушыны тексеру
+  // -------------------------------
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+
+    window.location.href = "../login.html";
+
+  } else {
+
+    // -------------------------------
+    // Мұғалім профилін алу
+    // -------------------------------
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("full_name, role")
+      .eq("id", user.id)
+      .single();
+
+    if (!error && profile) {
+
+      document.getElementById("welcome").textContent =
+        "Қош келдіңіз, " + profile.full_name + "!";
+
+      // Мұғалім емес болса
+      if (profile.role !== "teacher") {
+        window.location.href = "../student/dashboard.html";
+      }
+
+    }
+
+  }
+
+
+  // -------------------------------
+  // Шығу
+  // -------------------------------
+
+  document
+    .getElementById("logoutBtn")
+    .addEventListener("click", async () => {
+
+      await supabase.auth.signOut();
+
+      window.location.href = "../login.html";
+
+    });
+
+
+  // -------------------------------
+  // Келесі бөлімдер
+  // -------------------------------
+
+  document
+    .getElementById("aiWorkshop")
+    .addEventListener("click", () => {
+
+      alert("ЖИ-Шеберхана келесі кезеңде қосылады.");
+
+    });
+
+
+  document
+    .getElementById("resources")
+    .addEventListener("click", () => {
+
+      alert("Менің ресурстарым бөлімі келесі кезеңде қосылады.");
+
+    });
+
+
+  document
+    .getElementById("results")
+    .addEventListener("click", () => {
+
+      alert("Нәтижелер бөлімі келесі кезеңде қосылады.");
+
+    });
+
+</script>
+
+</body>
+</html>
