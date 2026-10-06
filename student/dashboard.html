@@ -1,1 +1,875 @@
-<!doctype html><html lang="kk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Оқушы — AI-BILIM</title><link rel="stylesheet" href="../css/style.css"></head><body><header class="top"><b>AI-BILIM</b><button class="linkbtn" onclick="logout()">Шығу</button></header><main class="dashboard"><h1>Оқушы кабинеті</h1><p id="welcome">Қош келдіңіз!</p><section class="grid"><div class="tile"><h3>🏫 Менің сыныбым</h3><p>Сынып коды арқылы қосылу.</p></div><div class="tile"><h3>📝 Тапсырмалар</h3><p>Мұғалім берген жұмыстар.</p></div><div class="tile"><h3>⭐ Нәтижелерім</h3><p>Ұпайлар мен орындалған жұмыстар.</p></div><div class="tile"><h3>📈 Прогресс</h3><p>Жеке оқу жетістіктері.</p></div></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/config.js"></script><script src="../js/auth.js"></script><script>protectPage('student');</script></body></html>
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Оқушы кабинеті | AI-BILIM</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #0f172a;
+    }
+
+    /* HEADER */
+
+    header {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .logout-btn {
+      border: none;
+      background: #fff1f2;
+      color: #be123c;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #ffe4e6;
+    }
+
+    /* MAIN */
+
+    main {
+      width: min(1180px, 92%);
+      margin: 45px auto;
+    }
+
+    .welcome {
+      margin-bottom: 30px;
+    }
+
+    .welcome h1 {
+      margin: 0 0 8px;
+      font-size: 38px;
+    }
+
+    .welcome p {
+      margin: 0;
+      color: #64748b;
+      font-size: 17px;
+    }
+
+    /* STAT CARDS */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 24px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+    }
+
+    .stat-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: #64748b;
+    }
+
+    /* JOIN CLASS */
+
+    .join-card {
+      background: linear-gradient(135deg, #ffffff, #f0fdf9);
+      border: 1px solid #d8e8df;
+      border-radius: 24px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .join-card h2 {
+      margin-top: 0;
+      font-size: 26px;
+    }
+
+    .join-card p {
+      color: #64748b;
+    }
+
+    .join-form {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .join-form input {
+      flex: 1;
+      padding: 16px 18px;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      font-size: 18px;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .join-form input:focus {
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+
+    .join-btn {
+      border: none;
+      background: #059669;
+      color: white;
+      padding: 16px 25px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .join-btn:hover {
+      background: #047857;
+    }
+
+    .join-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* MESSAGE */
+
+    #message {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    #message.success {
+      display: block;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+
+    #message.error {
+      display: block;
+      background: #fff1f2;
+      color: #be123c;
+      border: 1px solid #fecdd3;
+    }
+
+    /* CLASSES */
+
+    .section-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+    }
+
+    .section-card h2 {
+      margin-top: 0;
+      font-size: 27px;
+    }
+
+    .classes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 25px;
+    }
+
+    .class-card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #ffffff, #fffaf2);
+      border: 1px solid #eadfce;
+      border-radius: 20px;
+      padding: 24px;
+      transition: 0.2s ease;
+    }
+
+    .class-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background: linear-gradient(#d97706, #059669);
+    }
+
+    .class-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .class-card h3 {
+      margin: 0 0 12px;
+      font-size: 24px;
+    }
+
+    .subject {
+      display: inline-block;
+      background: #fff3d6;
+      color: #92400e;
+      padding: 9px 13px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .class-code {
+      margin-top: 18px;
+      padding: 12px;
+      background: #f0fdfa;
+      border-radius: 12px;
+      color: #0f766e;
+      font-weight: 700;
+    }
+
+    .open-class {
+      margin-top: 18px;
+      width: 100%;
+      border: none;
+      padding: 13px;
+      border-radius: 12px;
+      background: #0f8f76;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      background: #f8fafc;
+      border-radius: 18px;
+      color: #64748b;
+    }
+
+    @media (max-width: 760px) {
+
+      header {
+        padding: 18px 4%;
+      }
+
+      main {
+        width: 94%;
+        margin: 28px auto;
+      }
+
+      .welcome h1 {
+        font-size: 30px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .join-form {
+        flex-direction: column;
+      }
+
+      .join-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">AI-BILIM</div>
+
+  <button
+    class="logout-btn"
+    id="logoutBtn"
+    type="button"
+  >
+    Шығу
+  </button>
+</header>
+
+<main>
+
+  <section class="welcome">
+
+    <h1>🎓 Оқушы кабинеті</h1>
+
+    <p id="welcome">
+      Қош келдіңіз!
+    </p>
+
+  </section>
+
+
+  <section class="stats">
+
+    <div class="stat-card">
+      <div class="stat-icon">🏫</div>
+      <div class="stat-number" id="classCount">0</div>
+      <div class="stat-label">Менің сыныптарым</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📝</div>
+      <div class="stat-number">0</div>
+      <div class="stat-label">Тапсырмалар</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-number">—</div>
+      <div class="stat-label">Орташа нәтиже</div>
+    </div>
+
+  </section>
+
+
+  <section class="join-card">
+
+    <h2>🔑 Сыныпқа қосылу</h2>
+
+    <p>
+      Мұғалім берген қосылу кодын енгізіңіз.
+    </p>
+
+    <div class="join-form">
+
+      <input
+        type="text"
+        id="classCode"
+        placeholder="Мысалы: YBU-8269"
+        maxlength="20"
+        autocomplete="off"
+      >
+
+      <button
+        class="join-btn"
+        id="joinBtn"
+        type="button"
+      >
+        Сыныпқа қосылу
+      </button>
+
+    </div>
+
+    <div id="message"></div>
+
+  </section>
+
+
+  <section class="section-card">
+
+    <h2>🏫 Менің сыныптарым</h2>
+
+    <div
+      id="classes"
+      class="classes"
+    >
+      <div class="empty">
+        Сыныптар жүктелуде...
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+
+<!-- Біздің Supabase конфигурациямыз -->
+<script src="../js/config.js"></script>
+
+<script>
+
+let currentUser = null;
+
+
+/* ========================================
+   ХАБАРЛАМА
+======================================== */
+
+function showMessage(text, type = "success") {
+
+  const box = document.getElementById("message");
+
+  box.textContent = text;
+  box.className = type;
+
+}
+
+
+/* ========================================
+   ПАРАҚТЫ ІСКЕ ҚОСУ
+======================================== */
+
+async function init() {
+
+  try {
+
+    const {
+      data: { user },
+      error
+    } = await sb.auth.getUser();
+
+
+    if (error || !user) {
+
+      window.location.href = "../login.html";
+      return;
+
+    }
+
+
+    currentUser = user;
+
+
+    /* Оқушының аты */
+
+    let displayName =
+      user.user_metadata?.full_name ||
+      user.email ||
+      "Оқушы";
+
+
+    const {
+      data: profile,
+      error: profileError
+    } = await sb
+      .from("profiles")
+      .select("full_name, role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+
+    if (!profileError && profile?.full_name) {
+      displayName = profile.full_name;
+    }
+
+
+    document.getElementById("welcome").textContent =
+      `Қош келдіңіз, ${displayName}!`;
+
+
+    await loadMyClasses();
+
+  } catch (err) {
+
+    console.error(err);
+
+    showMessage(
+      "Кабинетті жүктеу кезінде қате шықты.",
+      "error"
+    );
+
+  }
+
+}
+
+
+/* ========================================
+   ОҚУШЫНЫҢ СЫНЫПТАРЫН ЖҮКТЕУ
+======================================== */
+
+async function loadMyClasses() {
+
+  const container =
+    document.getElementById("classes");
+
+
+  container.innerHTML =
+    `<div class="empty">Сыныптар жүктелуде...</div>`;
+
+
+  const {
+    data: memberships,
+    error
+  } = await sb
+    .from("class_members")
+    .select("class_id")
+    .eq("student_id", currentUser.id);
+
+
+  if (error) {
+
+    console.error(error);
+
+    container.innerHTML =
+      `<div class="empty">
+        Сыныптарды жүктеу кезінде қате шықты.
+      </div>`;
+
+    return;
+
+  }
+
+
+  if (!memberships || memberships.length === 0) {
+
+    document.getElementById("classCount").textContent = "0";
+
+    container.innerHTML =
+      `<div class="empty">
+        Сіз әзірге ешбір сыныпқа қосылмағансыз.<br><br>
+        Мұғалім берген кодты жоғарыдағы өріске енгізіңіз.
+      </div>`;
+
+    return;
+
+  }
+
+
+  const classIds =
+    memberships.map(item => item.class_id);
+
+
+  const {
+    data: classes,
+    error: classError
+  } = await sb
+    .from("classes")
+    .select("id, name, subject, class_code")
+    .in("id", classIds);
+
+
+  if (classError) {
+
+    console.error(classError);
+
+    container.innerHTML =
+      `<div class="empty">
+        Сынып мәліметтерін алу мүмкін болмады.
+      </div>`;
+
+    return;
+
+  }
+
+
+  document.getElementById("classCount").textContent =
+    classes?.length || 0;
+
+
+  if (!classes || classes.length === 0) {
+
+    container.innerHTML =
+      `<div class="empty">
+        Сынып табылмады.
+      </div>`;
+
+    return;
+
+  }
+
+
+  container.innerHTML = "";
+
+
+  classes.forEach(classItem => {
+
+    const card = document.createElement("div");
+
+    card.className = "class-card";
+
+
+    const title = document.createElement("h3");
+
+    title.textContent =
+      "🏫 " + (classItem.name || "Сынып");
+
+
+    const subject =
+      document.createElement("div");
+
+    subject.className = "subject";
+
+    subject.textContent =
+      "📚 " + (classItem.subject || "Пән");
+
+
+    const code =
+      document.createElement("div");
+
+    code.className = "class-code";
+
+    code.textContent =
+      "Қосылу коды: " +
+      (classItem.class_code || "—");
+
+
+    const button =
+      document.createElement("button");
+
+    button.className = "open-class";
+
+    button.type = "button";
+
+    button.textContent = "Сыныпты ашу →";
+
+
+    /*
+      Келесі кезеңде осы батырманы
+      оқушының class.html бетіне қосамыз.
+    */
+
+    button.addEventListener("click", () => {
+
+      alert(
+        `${classItem.name} сыныбы ашылады.\n\n` +
+        `Келесі кезеңде осы жерге тапсырмалар мен ресурстарды қосамыз.`
+      );
+
+    });
+
+
+    card.appendChild(title);
+    card.appendChild(subject);
+    card.appendChild(code);
+    card.appendChild(button);
+
+    container.appendChild(card);
+
+  });
+
+}
+
+
+/* ========================================
+   СЫНЫПҚА ҚОСЫЛУ
+======================================== */
+
+async function joinClass() {
+
+  const input =
+    document.getElementById("classCode");
+
+  const button =
+    document.getElementById("joinBtn");
+
+
+  const code =
+    input.value
+      .trim()
+      .toUpperCase();
+
+
+  if (!code) {
+
+    showMessage(
+      "Сынып кодын енгізіңіз.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  button.disabled = true;
+  button.textContent = "Тексерілуде...";
+
+
+  try {
+
+    /*
+      Код бойынша сыныпты іздеу
+    */
+
+    const {
+      data: classItem,
+      error: classError
+    } = await sb
+      .from("classes")
+      .select("id, name, subject, class_code")
+      .eq("class_code", code)
+      .maybeSingle();
+
+
+    if (classError) {
+      throw classError;
+    }
+
+
+    if (!classItem) {
+
+      showMessage(
+        "Мұндай қосылу коды табылмады.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    /*
+      Бұрын қосылған ба?
+    */
+
+    const {
+      data: existing,
+      error: existingError
+    } = await sb
+      .from("class_members")
+      .select("id")
+      .eq("class_id", classItem.id)
+      .eq("student_id", currentUser.id)
+      .maybeSingle();
+
+
+    if (existingError) {
+      throw existingError;
+    }
+
+
+    if (existing) {
+
+      showMessage(
+        "Сіз бұл сыныпқа бұрын қосылғансыз.",
+        "error"
+      );
+
+      await loadMyClasses();
+
+      return;
+
+    }
+
+
+    /*
+      class_members кестесіне тіркеу
+    */
+
+    const {
+      error: insertError
+    } = await sb
+      .from("class_members")
+      .insert({
+        class_id: classItem.id,
+        student_id: currentUser.id
+      });
+
+
+    if (insertError) {
+      throw insertError;
+    }
+
+
+    showMessage(
+      `Сәтті! Сіз «${classItem.name}» сыныбына қосылдыңыз.`,
+      "success"
+    );
+
+
+    input.value = "";
+
+
+    await loadMyClasses();
+
+
+  } catch (err) {
+
+    console.error(err);
+
+    showMessage(
+      "Сыныпқа қосылу кезінде қате шықты: " +
+      (err.message || "Белгісіз қате"),
+      "error"
+    );
+
+  } finally {
+
+    button.disabled = false;
+
+    button.textContent =
+      "Сыныпқа қосылу";
+
+  }
+
+}
+
+
+/* ========================================
+   БАТЫРМАЛАР
+======================================== */
+
+document
+  .getElementById("joinBtn")
+  .addEventListener(
+    "click",
+    joinClass
+  );
+
+
+document
+  .getElementById("classCode")
+  .addEventListener(
+    "keydown",
+    event => {
+
+      if (event.key === "Enter") {
+        joinClass();
+      }
+
+    }
+  );
+
+
+document
+  .getElementById("logoutBtn")
+  .addEventListener(
+    "click",
+    async () => {
+
+      await sb.auth.signOut();
+
+      window.location.href =
+        "../login.html";
+
+    }
+  );
+
+
+/* START */
+
+init();
+
+</script>
+
+</body>
+</html>
