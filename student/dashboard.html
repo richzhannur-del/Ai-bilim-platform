@@ -408,7 +408,18 @@
     </div>
 
   </section>
+<!-- ОҚУШЫ ТАПСЫРМАЛАРЫ -->
+<section style="margin-top:25px;">
 
+    <h2>📝 Менің тапсырмаларым</h2>
+
+    <div id="studentAssignments">
+        <div class="empty">
+            Тапсырмалар жүктелуде...
+        </div>
+    </div>
+
+</section>
 </main>
 
 
@@ -418,7 +429,157 @@
 <script>
 
 let currentUser = null;
+async function loadStudentAssignments() {
 
+    const container =
+        document.getElementById("studentAssignments");
+
+    if (!container) return;
+
+    try {
+
+        // Қазіргі оқушы
+        const {
+            data: { user },
+            error: userError
+        } = await sb.auth.getUser();
+
+        if (userError || !user) {
+            throw new Error("Оқушы анықталмады");
+        }
+
+        // Оқушы кірген сыныптарды анықтау
+        const { data: memberships, error: memberError } = await sb
+            .from("class_members")
+            .select("class_id")
+            .eq("student_id", user.id);
+
+        if (memberError) throw memberError;
+
+        if (!memberships || memberships.length === 0) {
+            container.innerHTML =
+                `<div class="empty">
+                    Сіз әлі сыныпқа қосылмағансыз.
+                 </div>`;
+            return;
+        }
+
+        const classIds =
+            memberships.map(item => item.class_id);
+
+        // Жарияланған тапсырмаларды алу
+        const { data: assignments, error: assignmentError } =
+            await sb
+                .from("assignments")
+                .select("*")
+                .in("class_id", classIds)
+                .eq("is_published", true)
+                .order("created_at", {
+                    ascending: false
+                });
+
+        if (assignmentError) throw assignmentError;
+
+        if (!assignments || assignments.length === 0) {
+
+            container.innerHTML =
+                `<div class="empty">
+                    Әзірге жаңа тапсырма жоқ.
+                 </div>`;
+
+            return;
+        }
+
+        container.innerHTML = "";
+
+        assignments.forEach(task => {
+
+            const card = document.createElement("div");
+
+            card.style.cssText = `
+                background:white;
+                border:1px solid #e2e8f0;
+                border-radius:16px;
+                padding:20px;
+                margin-top:12px;
+                box-shadow:0 5px 18px rgba(15,23,42,.06);
+            `;
+
+            const dueDate = task.due_date
+                ? new Date(task.due_date)
+                    .toLocaleString("kk-KZ")
+                : "Мерзімі көрсетілмеген";
+
+            card.innerHTML = `
+                <div style="
+                    font-size:20px;
+                    font-weight:800;
+                    color:#0f172a;
+                ">
+                    📝 ${escapeAssignment(task.title)}
+                </div>
+
+                <div style="
+                    margin-top:8px;
+                    color:#475569;
+                ">
+                    ${escapeAssignment(
+                        task.description ||
+                        "Сипаттама жоқ"
+                    )}
+                </div>
+
+                <div style="
+                    display:flex;
+                    gap:10px;
+                    flex-wrap:wrap;
+                    margin-top:15px;
+                ">
+
+                    <span style="
+                        background:#eef2ff;
+                        padding:7px 12px;
+                        border-radius:20px;
+                        font-weight:700;
+                    ">
+                        ⭐ ${task.max_score || 10} балл
+                    </span>
+
+                    <span style="
+                        background:#f0fdf4;
+                        padding:7px 12px;
+                        border-radius:20px;
+                    ">
+                        📅 ${dueDate}
+                    </span>
+
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+
+    } catch (error) {
+
+        console.error("Тапсырмалар қатесі:", error);
+
+        container.innerHTML =
+            `<div class="empty">
+                ❌ Тапсырмаларды жүктеу мүмкін болмады.
+             </div>`;
+    }
+}
+
+
+function escapeAssignment(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
 
 /* ========================================
    ХАБАРЛАМА
@@ -868,6 +1029,7 @@ document
 /* START */
 
 init();
+  loadStudentAssignments();
 
 </script>
 <!-- SOS + ҚОҢЫРАУ БАТЫРМАЛАРЫ -->
