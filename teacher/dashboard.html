@@ -1243,6 +1243,11 @@ async function downloadQMJWord() {
         return;
     }
 
+    if (!window.currentQMJ.ai) {
+        alert("Алдымен ЖИ арқылы жаңа ҚМЖ жасаңыз.");
+        return;
+    }
+
     if (typeof docx === "undefined") {
         alert("Word кітапханасы жүктелмеді. Бетті жаңартып көріңіз.");
         return;
@@ -1262,15 +1267,49 @@ async function downloadQMJWord() {
     } = docx;
 
     const q = window.currentQMJ;
+    const ai = q.ai;
 
-    // Кесте ұяшығын жасау
-    function cell(text, bold = false) {
+    // Қарапайым мәтін
+    function p(text = "", bold = false) {
+        return new Paragraph({
+            children: [
+                new TextRun({
+                    text: String(text || "—"),
+                    bold: bold,
+                    size: 22
+                })
+            ],
+            spacing: {
+                after: 120
+            }
+        });
+    }
+
+    // Тақырып
+    function heading(text) {
+        return new Paragraph({
+            children: [
+                new TextRun({
+                    text: String(text),
+                    bold: true,
+                    size: 26
+                })
+            ],
+            spacing: {
+                before: 220,
+                after: 120
+            }
+        });
+    }
+
+    // Кесте ұяшығы
+    function cell(text = "", bold = false) {
         return new TableCell({
             children: [
                 new Paragraph({
                     children: [
                         new TextRun({
-                            text: String(text),
+                            text: String(text || "—"),
                             bold: bold,
                             size: 20
                         })
@@ -1280,7 +1319,45 @@ async function downloadQMJWord() {
         });
     }
 
-    const lessonTable = new Table({
+    // Массивті мәтінге айналдыру
+    function arrayText(arr) {
+        if (!Array.isArray(arr) || arr.length === 0) {
+            return "—";
+        }
+
+        return arr
+            .map((item, index) => `${index + 1}. ${item}`)
+            .join("\n");
+    }
+
+    // AI тапсырмаларын дайындау
+    let tasksText = "—";
+
+    if (
+        Array.isArray(ai.middle?.tasks) &&
+        ai.middle.tasks.length > 0
+    ) {
+
+        tasksText = ai.middle.tasks.map((task, index) => {
+
+            const descriptors =
+                Array.isArray(task.descriptors)
+                    ? task.descriptors
+                        .map(d => `• ${d}`)
+                        .join("\n")
+                    : "—";
+
+            return (
+                `${index + 1}-тапсырма. ${task.title || ""}\n` +
+                `${task.task || ""}\n\n` +
+                `Дескриптор:\n${descriptors}`
+            );
+
+        }).join("\n\n");
+    }
+
+    // Негізгі ақпарат кестесі
+    const infoTable = new Table({
 
         width: {
             size: 100,
@@ -1291,260 +1368,223 @@ async function downloadQMJWord() {
 
             new TableRow({
                 children: [
-                    cell("Сабақ кезеңі", true),
-                    cell("Мұғалімнің әрекеті", true),
-                    cell("Оқушының әрекеті", true),
+                    cell("Пән", true),
+                    cell(q.subject)
+                ]
+            }),
+
+            new TableRow({
+                children: [
+                    cell("Сынып", true),
+                    cell(q.grade)
+                ]
+            }),
+
+            new TableRow({
+                children: [
+                    cell("Сабақ тақырыбы", true),
+                    cell(q.topic)
+                ]
+            }),
+
+            new TableRow({
+                children: [
+                    cell("Оқу мақсаты", true),
+                    cell(q.objective || "Тақырыпқа сәйкес")
+                ]
+            }),
+
+            new TableRow({
+                children: [
+                    cell("Сабақ мақсаты", true),
+                    cell(ai.lessonGoal)
+                ]
+            }),
+
+            new TableRow({
+                children: [
+                    cell("Бағалау критерийлері", true),
+                    cell(arrayText(ai.assessmentCriteria))
+                ]
+            }),
+
+            new TableRow({
+                children: [
+                    cell("Құндылықтар", true),
+                    cell(ai.values)
+                ]
+            })
+
+        ]
+    });
+
+
+    // Сабақ барысы кестесі
+    const lessonTable = new Table({
+
+        width: {
+            size: 100,
+            type: WidthType.PERCENTAGE
+        },
+
+        rows: [
+
+            // Тақырыптар
+            new TableRow({
+                children: [
+                    cell("Сабақ кезеңі / уақыт", true),
+                    cell("Мұғалім әрекеті", true),
+                    cell("Оқушы әрекеті", true),
                     cell("Бағалау", true),
                     cell("Ресурстар", true)
                 ]
             }),
 
+            // Сабақ басы
             new TableRow({
                 children: [
 
                     cell(
-                        "Сабақтың басы\n5 минут"
+                        `Сабақтың басы\n${ai.beginning?.time || "5 минут"}`,
+                        true
                     ),
 
-                    cell(
-                        "Амандасады. Психологиялық ахуал қалыптастырады. Сабақтың тақырыбы мен мақсатын таныстырады."
-                    ),
+                    cell(ai.beginning?.teacher),
 
-                    cell(
-                        "Сабаққа дайындалады. Сабақ мақсатын анықтайды."
-                    ),
+                    cell(ai.beginning?.student),
 
-                    cell(
-                        "Ауызша мадақтау"
-                    ),
+                    cell(ai.beginning?.assessment),
 
-                    cell(
-                        "Интерактивті тақта"
-                    )
+                    cell(ai.beginning?.resources)
+
                 ]
             }),
 
+            // Сабақ ортасы
             new TableRow({
                 children: [
 
                     cell(
-                        "Сабақтың ортасы\n30 минут"
+                        `Сабақтың ортасы\n${ai.middle?.time || "30 минут"}`,
+                        true
                     ),
 
                     cell(
-                        q.topic +
-                        " тақырыбын түсіндіреді. Деңгейлік және практикалық тапсырмалар ұсынады."
+                        `${ai.middle?.teacher || "—"}\n\n` +
+                        `ТАПСЫРМАЛАР:\n\n${tasksText}`
                     ),
 
-                    cell(
-                        "Ақпаратпен танысады. Жеке және жұптық тапсырмаларды орындайды."
-                    ),
+                    cell(ai.middle?.student),
 
-                    cell(
-                        "Дескриптор арқылы бағалау"
-                    ),
+                    cell(ai.middle?.assessment),
 
-                    cell(
-                        "Оқулық, презентация, цифрлық ресурс"
-                    )
+                    cell(ai.middle?.resources)
+
                 ]
             }),
 
+            // Сабақ соңы
             new TableRow({
                 children: [
 
                     cell(
-                        "Сабақтың соңы\n10 минут"
+                        `Сабақтың соңы\n${ai.end?.time || "10 минут"}`,
+                        true
                     ),
 
-                    cell(
-                        "Сабақты қорытындылайды. Рефлексия ұйымдастырады."
-                    ),
+                    cell(ai.end?.teacher),
 
-                    cell(
-                        "Өз жұмысын бағалайды. Кері байланыс береді."
-                    ),
+                    cell(ai.end?.student),
 
-                    cell(
-                        "Өзін-өзі бағалау"
-                    ),
+                    cell(ai.end?.assessment),
 
-                    cell(
-                        "Рефлексия парағы"
-                    )
+                    cell(ai.end?.resources)
+
                 ]
             })
+
         ]
     });
 
 
+    const children = [
+
+        new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+                new TextRun({
+                    text: "ҚЫСҚА МЕРЗІМДІ ЖОСПАР",
+                    bold: true,
+                    size: 32
+                })
+            ],
+            spacing: {
+                after: 300
+            }
+        }),
+
+        infoTable,
+
+        heading("Сабақтың барысы"),
+
+        lessonTable,
+
+        heading("Саралау"),
+
+        p(
+            "A деңгейі: " +
+            (ai.differentiation?.A || "—")
+        ),
+
+        p(
+            "B деңгейі: " +
+            (ai.differentiation?.B || "—")
+        ),
+
+        p(
+            "C деңгейі: " +
+            (ai.differentiation?.C || "—")
+        ),
+
+        heading("ЕБҚ оқушысына бейімделген тапсырма"),
+
+        p(ai.inclusiveTask || "—"),
+
+        heading("Рефлексия"),
+
+        p(ai.reflection || "—")
+
+    ];
+
+
     const documentFile = new Document({
 
-        sections: [{
+        sections: [
+            {
+                properties: {},
+                children: children
+            }
+        ]
 
-            properties: {},
-
-            children: [
-
-                new Paragraph({
-                    text: "ҚЫСҚА МЕРЗІМДІ ЖОСПАР",
-                    heading: HeadingLevel.TITLE,
-                    alignment: AlignmentType.CENTER
-                }),
-
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Пән: ",
-                            bold: true
-                        }),
-                        new TextRun(q.subject)
-                    ]
-                }),
-
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Сынып: ",
-                            bold: true
-                        }),
-                        new TextRun(
-                            q.grade + "-сынып"
-                        )
-                    ]
-                }),
-
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Сабақтың тақырыбы: ",
-                            bold: true
-                        }),
-                        new TextRun(q.topic)
-                    ]
-                }),
-
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Оқу мақсаты: ",
-                            bold: true
-                        }),
-                        new TextRun(q.objective)
-                    ]
-                }),
-
-                new Paragraph({
-                    text: ""
-                }),
-
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Сабақтың мақсаты",
-                            bold: true,
-                            size: 26
-                        })
-                    ]
-                }),
-
-                new Paragraph({
-                    text:
-                        "Оқушылар " +
-                        q.topic +
-                        " тақырыбы бойынша негізгі ұғымдарды меңгереді және алған білімдерін тапсырмалар орындау барысында қолданады."
-                }),
-
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Бағалау критерийлері",
-                            bold: true,
-                            size: 26
-                        })
-                    ]
-                }),
-
-                new Paragraph({
-                    text:
-                        "• Тақырыптың негізгі мазмұнын түсіндіреді;"
-                }),
-
-                new Paragraph({
-                    text:
-                        "• Берілген тапсырмаларды орындайды;"
-                }),
-
-                new Paragraph({
-                    text:
-                        "• Алған білімін практикалық жағдайда қолданады."
-                }),
-
-                new Paragraph({
-                    text: ""
-                }),
-
-                lessonTable,
-
-                new Paragraph({
-                    text: ""
-                }),
-
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Саралау",
-                            bold: true,
-                            size: 26
-                        })
-                    ]
-                }),
-
-                new Paragraph({
-                    text:
-                        "Қолдауды қажет ететін оқушыларға қысқа нұсқаулық пен үлгі беріледі. Қабілеті жоғары оқушыларға күрделендірілген тапсырма ұсынылады."
-                }),
-
-                new Paragraph({
-                    children: [
-                        new TextRun({
-                            text: "Рефлексия",
-                            bold: true,
-                            size: 26
-                        })
-                    ]
-                }),
-
-                new Paragraph({
-                    text:
-                        "«Бағдаршам» әдісі: жасыл — түсіндім, сары — сұрағым бар, қызыл — қосымша көмек қажет."
-                })
-            ]
-        }]
     });
 
 
     try {
 
-        const blob =
-            await Packer.toBlob(documentFile);
+        const blob = await Packer.toBlob(documentFile);
 
-        const url =
-            URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
 
-        const link =
-            document.createElement("a");
+        const link = document.createElement("a");
+
+        const safeTopic = String(q.topic || "QMJ")
+            .replace(/[\\/:*?"<>|]/g, "_")
+            .substring(0, 70);
 
         link.href = url;
 
-        // Файл атауын қауіпсіз ету
-        const safeTopic =
-            q.topic
-                .replace(/[\\/:*?"<>|]/g, "")
-                .substring(0, 50);
-
         link.download =
-            `ҚМЖ_${q.subject}_${q.grade}_${safeTopic}.docx`;
+            `ҚМЖ_${q.subject}_${q.grade}сынып_${safeTopic}.docx`;
 
         document.body.appendChild(link);
 
@@ -1558,14 +1598,13 @@ async function downloadQMJWord() {
 
     } catch (error) {
 
-        console.error(
-            "Word жасау қатесі:",
-            error
-        );
+        console.error("Word жасау қатесі:", error);
 
         alert(
-            "Word файлын жасау кезінде қате пайда болды."
+            "Word файлын жасау кезінде қате пайда болды: " +
+            error.message
         );
+
     }
 }
 // Шығу
