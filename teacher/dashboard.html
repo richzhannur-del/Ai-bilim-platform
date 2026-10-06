@@ -388,7 +388,46 @@ body{
   </div>
 
 </section>
+<!-- SOS ХАБАРЛАМАЛАРЫ -->
+<section id="sosAlertSection" style="display:none; margin:20px 0;">
+    <div style="
+        background:#fff1f2;
+        border:2px solid #ef4444;
+        border-radius:18px;
+        padding:22px;
+        box-shadow:0 8px 25px rgba(220,38,38,.12);
+    ">
+        <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:15px;
+            flex-wrap:wrap;
+        ">
+            <div>
+                <h2 style="margin:0;color:#b91c1c;">
+                    🚨 SOS ХАБАРЛАМАСЫ
+                </h2>
 
+                <p style="margin:7px 0 0;color:#7f1d1d;">
+                    Оқушыға жедел көмек қажет
+                </p>
+            </div>
+
+            <div id="sosCount" style="
+                background:#dc2626;
+                color:white;
+                padding:8px 14px;
+                border-radius:30px;
+                font-weight:800;
+            ">
+                0 жаңа хабарлама
+            </div>
+        </div>
+
+        <div id="sosAlertsList" style="margin-top:18px;"></div>
+    </div>
+</section>
 
 <section class="stats">
 
@@ -720,7 +759,188 @@ document.getElementById("logoutBtn")
 
 
 init();
+  loadSOSAlerts();
+// ========================================
+// SOS ХАБАРЛАМАЛАРЫ
+// ========================================
 
+async function loadSOSAlerts() {
+
+    const { data: { user }, error: userError } =
+        await sb.auth.getUser();
+
+    if (userError || !user) return;
+
+    const { data: alerts, error } = await sb
+        .from("sos_alerts")
+        .select(`
+            id,
+            student_id,
+            class_id,
+            message,
+            status,
+            created_at
+        `)
+        .eq("teacher_id", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("SOS жүктеу қатесі:", error);
+        return;
+    }
+
+    const section =
+        document.getElementById("sosAlertSection");
+
+    const list =
+        document.getElementById("sosAlertsList");
+
+    const count =
+        document.getElementById("sosCount");
+
+    if (!alerts || alerts.length === 0) {
+        section.style.display = "none";
+        return;
+    }
+
+    section.style.display = "block";
+
+    count.textContent =
+        alerts.length + " жаңа хабарлама";
+
+    list.innerHTML = "";
+
+    for (const alert of alerts) {
+
+        let studentName = "Оқушы";
+
+        const { data: profile } = await sb
+            .from("profiles")
+            .select("full_name")
+            .eq("id", alert.student_id)
+            .maybeSingle();
+
+        if (profile?.full_name) {
+            studentName = profile.full_name;
+        }
+
+        const card = document.createElement("div");
+
+        card.style.cssText = `
+            background:white;
+            border:1px solid #fecaca;
+            border-left:6px solid #dc2626;
+            border-radius:14px;
+            padding:18px;
+            margin-top:12px;
+        `;
+
+        const date = alert.created_at
+            ? new Date(alert.created_at)
+                .toLocaleString("kk-KZ")
+            : "";
+
+        card.innerHTML = `
+            <div style="
+                font-size:18px;
+                font-weight:800;
+                color:#991b1b;
+                margin-bottom:8px;
+            ">
+                👤 ${escapeSOS(studentName)}
+            </div>
+
+            <div style="margin-bottom:6px;">
+                💬 ${escapeSOS(
+                    alert.message ||
+                    "Маған мұғалімнің көмегі қажет"
+                )}
+            </div>
+
+            <div style="
+                color:#64748b;
+                font-size:14px;
+                margin-bottom:15px;
+            ">
+                🕐 ${date}
+            </div>
+
+            <div style="
+                display:flex;
+                gap:10px;
+                flex-wrap:wrap;
+            ">
+
+                <a
+                    href="tel:+77007251076"
+                    style="
+                        background:#16a34a;
+                        color:white;
+                        text-decoration:none;
+                        padding:10px 16px;
+                        border-radius:10px;
+                        font-weight:700;
+                    "
+                >
+                    📞 Қоңырау шалу
+                </a>
+
+                <button
+                    type="button"
+                    onclick="resolveSOS('${alert.id}')"
+                    style="
+                        background:#2563eb;
+                        color:white;
+                        border:none;
+                        padding:10px 16px;
+                        border-radius:10px;
+                        font-weight:700;
+                        cursor:pointer;
+                    "
+                >
+                    ✅ Қаралды
+                </button>
+
+            </div>
+        `;
+
+        list.appendChild(card);
+    }
+}
+
+
+// SOS-ты қаралды деп белгілеу
+async function resolveSOS(alertId) {
+
+    const { error } = await sb
+        .from("sos_alerts")
+        .update({
+            status: "resolved",
+            resolved_at: new Date().toISOString()
+        })
+        .eq("id", alertId);
+
+    if (error) {
+        console.error("SOS жаңарту қатесі:", error);
+        alert("SOS хабарламасын жаңарту мүмкін болмады.");
+        return;
+    }
+
+    await loadSOSAlerts();
+}
+
+
+// Қауіпсіз мәтін шығару
+function escapeSOS(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
 </script>
 
 </body>
