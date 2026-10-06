@@ -742,18 +742,10 @@ document.getElementById("workshopMenu")
 document.getElementById("createBtn")
 .addEventListener("click", async () => {
 
-    const subject =
-        document.getElementById("subject").value;
-
-    const grade =
-        document.getElementById("grade").value;
-
-    const topic =
-        document.getElementById("topic").value.trim();
-
-    const type =
-        document.getElementById("resourceType").value;
-
+    const subject = document.getElementById("subject").value;
+    const grade = document.getElementById("grade").value;
+    const topic = document.getElementById("topic").value.trim();
+    const type = document.getElementById("resourceType").value;
     const learningObjective =
         document.getElementById("learningObjective").value.trim();
 
@@ -767,14 +759,281 @@ document.getElementById("createBtn")
         return;
     }
 
-    createQMJ(
-        subject,
-        grade,
-        topic,
-        learningObjective
-    );
-});
+    const btn = document.getElementById("createBtn");
+    const result = document.getElementById("qmjResult");
 
+    btn.disabled = true;
+    btn.innerHTML = "⏳ ЖИ ҚМЖ жасап жатыр...";
+
+    result.style.display = "block";
+    result.innerHTML = `
+        <div style="text-align:center;padding:30px;">
+            <h3>🤖 AI-BILIM</h3>
+            <p>ҚМЖ жасалуда...</p>
+            <p style="color:#64748b;">Бірнеше секунд күтіңіз</p>
+        </div>
+    `;
+
+    try {
+
+        const response = await fetch("/api/generate-qmj", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                subject,
+                grade,
+                topic,
+                learningObjective
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "ҚМЖ жасау кезінде қате пайда болды.");
+        }
+
+        const qmj = data.qmj;
+
+        window.currentQMJ = {
+            subject,
+            grade,
+            topic,
+            objective: learningObjective,
+            ai: qmj
+        };
+
+        showAIQMJ(
+            subject,
+            grade,
+            topic,
+            learningObjective,
+            qmj
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        result.innerHTML = `
+            <div style="padding:20px;color:#b91c1c;">
+                <h3>⚠️ Қате</h3>
+                <p>${escapeQMJ(error.message)}</p>
+            </div>
+        `;
+
+    } finally {
+
+        btn.disabled = false;
+        btn.innerHTML = "✨ Жасау";
+
+    }
+});
+  function escapeQMJ(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function qmjList(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        return "—";
+    }
+
+    return `
+        <ul style="margin:6px 0 6px 20px;">
+            ${items.map(item =>
+                `<li>${escapeQMJ(item)}</li>`
+            ).join("")}
+        </ul>
+    `;
+}
+
+function showAIQMJ(subject, grade, topic, learningObjective, qmj) {
+
+    const result = document.getElementById("qmjResult");
+
+    const tasks = Array.isArray(qmj.middle?.tasks)
+        ? qmj.middle.tasks
+        : [];
+
+    const tasksHTML = tasks.length
+        ? tasks.map((task, index) => `
+            <div style="
+                margin:14px 0;
+                padding:15px;
+                background:#f8fafc;
+                border-radius:12px;
+                border-left:4px solid #6366f1;
+            ">
+                <strong>
+                    ${index + 1}-тапсырма.
+                    ${escapeQMJ(task.title || "")}
+                </strong>
+
+                <p>${escapeQMJ(task.task || "")}</p>
+
+                <strong>Дескриптор:</strong>
+                ${qmjList(task.descriptors)}
+            </div>
+        `).join("")
+        : "<p>Тапсырмалар көрсетілмеді.</p>";
+
+    result.style.display = "block";
+
+    result.innerHTML = `
+        <div style="line-height:1.65;">
+
+            <h2 style="text-align:center;margin-bottom:20px;">
+                Қысқа мерзімді жоспар
+            </h2>
+
+            <table style="
+                width:100%;
+                border-collapse:collapse;
+                margin-bottom:20px;
+            ">
+                <tr>
+                    <td style="border:1px solid #ddd;padding:10px;">
+                        <b>Пән</b>
+                    </td>
+                    <td style="border:1px solid #ddd;padding:10px;">
+                        ${escapeQMJ(subject)}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:10px;">
+                        <b>Сынып</b>
+                    </td>
+                    <td style="border:1px solid #ddd;padding:10px;">
+                        ${escapeQMJ(grade)}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:10px;">
+                        <b>Сабақ тақырыбы</b>
+                    </td>
+                    <td style="border:1px solid #ddd;padding:10px;">
+                        ${escapeQMJ(topic)}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border:1px solid #ddd;padding:10px;">
+                        <b>Оқу мақсаты</b>
+                    </td>
+                    <td style="border:1px solid #ddd;padding:10px;">
+                        ${escapeQMJ(learningObjective || "Тақырыпқа сәйкес")}
+                    </td>
+                </tr>
+            </table>
+
+            <h3>🎯 Сабақ мақсаты</h3>
+            <p>${escapeQMJ(qmj.lessonGoal || "—")}</p>
+
+            <h3>✅ Бағалау критерийлері</h3>
+            ${qmjList(qmj.assessmentCriteria)}
+
+            <h3>💎 Құндылықтар</h3>
+            <p>${escapeQMJ(qmj.values || "—")}</p>
+
+            <hr>
+
+            <h3>🟢 Сабақтың басы — ${escapeQMJ(qmj.beginning?.time || "5 минут")}</h3>
+
+            <p><b>Мұғалім әрекеті:</b><br>
+            ${escapeQMJ(qmj.beginning?.teacher || "—")}</p>
+
+            <p><b>Оқушы әрекеті:</b><br>
+            ${escapeQMJ(qmj.beginning?.student || "—")}</p>
+
+            <p><b>Бағалау:</b><br>
+            ${escapeQMJ(qmj.beginning?.assessment || "—")}</p>
+
+            <p><b>Ресурстар:</b><br>
+            ${escapeQMJ(qmj.beginning?.resources || "—")}</p>
+
+            <hr>
+
+            <h3>🟡 Сабақтың ортасы — ${escapeQMJ(qmj.middle?.time || "30 минут")}</h3>
+
+            <p><b>Мұғалім әрекеті:</b><br>
+            ${escapeQMJ(qmj.middle?.teacher || "—")}</p>
+
+            <p><b>Оқушы әрекеті:</b><br>
+            ${escapeQMJ(qmj.middle?.student || "—")}</p>
+
+            <h4>📝 Тақырыптық тапсырмалар</h4>
+
+            ${tasksHTML}
+
+            <p><b>Қалыптастырушы бағалау:</b><br>
+            ${escapeQMJ(qmj.middle?.assessment || "—")}</p>
+
+            <p><b>Ресурстар:</b><br>
+            ${escapeQMJ(qmj.middle?.resources || "—")}</p>
+
+            <hr>
+
+            <h3>🔵 Сабақтың соңы — ${escapeQMJ(qmj.end?.time || "10 минут")}</h3>
+
+            <p><b>Мұғалім әрекеті:</b><br>
+            ${escapeQMJ(qmj.end?.teacher || "—")}</p>
+
+            <p><b>Оқушы әрекеті:</b><br>
+            ${escapeQMJ(qmj.end?.student || "—")}</p>
+
+            <p><b>Бағалау:</b><br>
+            ${escapeQMJ(qmj.end?.assessment || "—")}</p>
+
+            <h3>📊 Саралау</h3>
+
+            <p><b>A деңгейі:</b>
+            ${escapeQMJ(qmj.differentiation?.A || "—")}</p>
+
+            <p><b>B деңгейі:</b>
+            ${escapeQMJ(qmj.differentiation?.B || "—")}</p>
+
+            <p><b>C деңгейі:</b>
+            ${escapeQMJ(qmj.differentiation?.C || "—")}</p>
+
+            <h3>♿ ЕБҚ оқушысына қолдау</h3>
+            <p>${escapeQMJ(qmj.inclusiveTask || "—")}</p>
+
+            <h3>💭 Рефлексия</h3>
+            <p>${escapeQMJ(qmj.reflection || "—")}</p>
+
+            <div style="margin-top:25px;text-align:center;">
+                <button
+                    type="button"
+                    onclick="downloadQMJWord()"
+                    style="
+                        padding:12px 22px;
+                        border:0;
+                        border-radius:12px;
+                        cursor:pointer;
+                        font-weight:700;
+                    "
+                >
+                    📥 Word (.docx) жүктеу
+                </button>
+            </div>
+
+        </div>
+    `;
+
+    result.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
   function createQMJ(subject, grade, topic, learningObjective) {
 
     const result =
