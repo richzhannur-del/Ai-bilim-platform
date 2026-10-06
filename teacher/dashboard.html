@@ -313,6 +313,7 @@ body{
   .create-btn{padding:13px}
 }
 </style>
+  <script src="https://unpkg.com/docx@9.5.1/dist/index.umd.cjs"></script>
 </head>
 
 <body>
@@ -491,6 +492,11 @@ body{
     </select>
 
     <input id="topic" placeholder="Сабақ тақырыбын енгізіңіз...">
+    <input
+    id="learningObjective"
+    placeholder="Оқу мақсатын енгізіңіз, мысалы: 6.3.2.1..."
+    style="margin-top:10px;"
+>
 
     <select id="resourceType">
       <option value="">Ресурс түрі</option>
@@ -507,6 +513,15 @@ body{
     <button class="create-btn" id="createBtn">
       ✦ Жасау →
     </button>
+    <div id="qmjResult" style="
+    display:none;
+    margin-top:25px;
+    background:white;
+    border:1px solid #e2e8f0;
+    border-radius:18px;
+    padding:25px;
+">
+</div>
 
   </div>
 
@@ -720,33 +735,580 @@ document.getElementById("workshopMenu")
 });
 
 
-// Жасау
+// ========================================
+// ЖИ-ШЕБЕРХАНА — ҚМЖ
+// ========================================
+
 document.getElementById("createBtn")
-.addEventListener("click",()=>{
+.addEventListener("click", async () => {
 
-  const subject=document.getElementById("subject").value;
-  const grade=document.getElementById("grade").value;
-  const topic=document.getElementById("topic").value.trim();
-  const type=document.getElementById("resourceType").value;
+    const subject =
+        document.getElementById("subject").value;
 
-  if(!subject || !grade || !topic || !type){
+    const grade =
+        document.getElementById("grade").value;
 
-    alert(
-      "Пәнді, сыныпты, тақырыпты және ресурс түрін толтырыңыз."
+    const topic =
+        document.getElementById("topic").value.trim();
+
+    const type =
+        document.getElementById("resourceType").value;
+
+    const learningObjective =
+        document.getElementById("learningObjective").value.trim();
+
+    if (!subject || !grade || !topic || !type) {
+        alert("Пәнді, сыныпты, тақырыпты және ресурс түрін толтырыңыз.");
+        return;
+    }
+
+    if (type !== "ҚМЖ") {
+        alert("Қазір ҚМЖ генераторы іске қосылды. ҚМЖ ресурс түрін таңдаңыз.");
+        return;
+    }
+
+    createQMJ(
+        subject,
+        grade,
+        topic,
+        learningObjective
     );
-
-    return;
-  }
-
-  alert(
-    "Келесі кезеңде ЖИ осы сұраныс бойынша «"+
-    type+
-    "» ресурсын автоматты түрде жасайды."
-  );
-
 });
 
+  function createQMJ(subject, grade, topic, learningObjective) {
 
+    const result =
+        document.getElementById("qmjResult");
+
+    const objective =
+        learningObjective ||
+        `${topic} тақырыбы бойынша негізгі ұғымдарды түсіну және практикада қолдану`;
+
+    result.style.display = "block";
+
+    result.innerHTML = `
+        <h2 style="margin-top:0;">
+            📄 Қысқа мерзімді жоспар
+        </h2>
+
+        <p><b>Пән:</b> ${subject}</p>
+        <p><b>Сынып:</b> ${grade}-сынып</p>
+        <p><b>Сабақ тақырыбы:</b> ${topic}</p>
+        <p><b>Оқу мақсаты:</b> ${objective}</p>
+
+        <hr>
+
+        <h3>Сабақ мақсаты</h3>
+
+        <p>
+            Оқушылар ${topic} тақырыбы бойынша
+            негізгі ұғымдарды меңгереді,
+            алған білімдерін тапсырмалар орындау
+            барысында қолданады.
+        </p>
+
+        <h3>Бағалау критерийлері</h3>
+
+        <ul>
+            <li>Тақырыптың негізгі мазмұнын түсіндіреді;</li>
+            <li>Берілген тапсырмаларды орындайды;</li>
+            <li>Алған білімін практикалық жағдайда қолданады.</li>
+        </ul>
+
+        <h3>Сабақ барысы</h3>
+
+        <div style="overflow-x:auto;">
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+            margin-top:10px;
+        ">
+
+            <tr>
+                <th style="border:1px solid #ccc;padding:10px;">
+                    Сабақ кезеңі
+                </th>
+
+                <th style="border:1px solid #ccc;padding:10px;">
+                    Мұғалім әрекеті
+                </th>
+
+                <th style="border:1px solid #ccc;padding:10px;">
+                    Оқушы әрекеті
+                </th>
+
+                <th style="border:1px solid #ccc;padding:10px;">
+                    Бағалау
+                </th>
+
+                <th style="border:1px solid #ccc;padding:10px;">
+                    Ресурстар
+                </th>
+            </tr>
+
+            <tr>
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Сабақтың басы<br>5 минут
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Амандасады. Психологиялық ахуал
+                    қалыптастырады. Сабақ тақырыбы мен
+                    мақсатын таныстырады.
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Сабаққа дайындалады.
+                    Сабақ мақсатын анықтайды.
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Ауызша мадақтау
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Интерактивті тақта
+                </td>
+            </tr>
+
+            <tr>
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Сабақтың ортасы<br>30 минут
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    ${topic} тақырыбын түсіндіреді.
+                    Деңгейлік және практикалық
+                    тапсырмалар ұсынады.
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Ақпаратпен танысады.
+                    Жеке және жұптық тапсырмаларды
+                    орындайды.
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Дескриптор арқылы бағалау
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Оқулық, презентация,
+                    цифрлық ресурс
+                </td>
+            </tr>
+
+            <tr>
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Сабақтың соңы<br>10 минут
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Сабақты қорытындылайды.
+                    Рефлексия ұйымдастырады.
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Өз жұмысын бағалайды.
+                    Кері байланыс береді.
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Өзін-өзі бағалау
+                </td>
+
+                <td style="border:1px solid #ccc;padding:10px;">
+                    Рефлексия парағы
+                </td>
+            </tr>
+
+        </table>
+        </div>
+
+        <h3>Саралау</h3>
+
+        <p>
+            Қолдауды қажет ететін оқушыларға
+            қысқа нұсқаулық пен үлгі беріледі.
+            Қабілеті жоғары оқушыларға күрделендірілген
+            тапсырма ұсынылады.
+        </p>
+
+        <h3>Рефлексия</h3>
+
+        <p>
+            «Бағдаршам» әдісі:
+            🟢 түсіндім,
+            🟡 сұрағым бар,
+            🔴 қосымша көмек қажет.
+        </p>
+
+        <button
+            type="button"
+            onclick="downloadQMJWord()"
+            style="
+                margin-top:20px;
+                padding:13px 22px;
+                border:none;
+                border-radius:12px;
+                background:#2563eb;
+                color:white;
+                font-weight:800;
+                cursor:pointer;
+            "
+        >
+            📥 Word (.docx) жүктеу
+        </button>
+    `;
+
+    result.scrollIntoView({
+        behavior: "smooth"
+    });
+
+    window.currentQMJ = {
+        subject,
+        grade,
+        topic,
+        objective
+    };
+}
+
+// ========================================
+// ҚМЖ-ны WORD (.docx) ЖҮКТЕУ
+// ========================================
+
+async function downloadQMJWord() {
+
+    if (!window.currentQMJ) {
+        alert("Алдымен ҚМЖ құрыңыз.");
+        return;
+    }
+
+    if (typeof docx === "undefined") {
+        alert("Word кітапханасы жүктелмеді. Бетті жаңартып көріңіз.");
+        return;
+    }
+
+    const {
+        Document,
+        Packer,
+        Paragraph,
+        TextRun,
+        Table,
+        TableRow,
+        TableCell,
+        WidthType,
+        AlignmentType,
+        HeadingLevel
+    } = docx;
+
+    const q = window.currentQMJ;
+
+    // Кесте ұяшығын жасау
+    function cell(text, bold = false) {
+        return new TableCell({
+            children: [
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: String(text),
+                            bold: bold,
+                            size: 20
+                        })
+                    ]
+                })
+            ]
+        });
+    }
+
+    const lessonTable = new Table({
+
+        width: {
+            size: 100,
+            type: WidthType.PERCENTAGE
+        },
+
+        rows: [
+
+            new TableRow({
+                children: [
+                    cell("Сабақ кезеңі", true),
+                    cell("Мұғалімнің әрекеті", true),
+                    cell("Оқушының әрекеті", true),
+                    cell("Бағалау", true),
+                    cell("Ресурстар", true)
+                ]
+            }),
+
+            new TableRow({
+                children: [
+
+                    cell(
+                        "Сабақтың басы\n5 минут"
+                    ),
+
+                    cell(
+                        "Амандасады. Психологиялық ахуал қалыптастырады. Сабақтың тақырыбы мен мақсатын таныстырады."
+                    ),
+
+                    cell(
+                        "Сабаққа дайындалады. Сабақ мақсатын анықтайды."
+                    ),
+
+                    cell(
+                        "Ауызша мадақтау"
+                    ),
+
+                    cell(
+                        "Интерактивті тақта"
+                    )
+                ]
+            }),
+
+            new TableRow({
+                children: [
+
+                    cell(
+                        "Сабақтың ортасы\n30 минут"
+                    ),
+
+                    cell(
+                        q.topic +
+                        " тақырыбын түсіндіреді. Деңгейлік және практикалық тапсырмалар ұсынады."
+                    ),
+
+                    cell(
+                        "Ақпаратпен танысады. Жеке және жұптық тапсырмаларды орындайды."
+                    ),
+
+                    cell(
+                        "Дескриптор арқылы бағалау"
+                    ),
+
+                    cell(
+                        "Оқулық, презентация, цифрлық ресурс"
+                    )
+                ]
+            }),
+
+            new TableRow({
+                children: [
+
+                    cell(
+                        "Сабақтың соңы\n10 минут"
+                    ),
+
+                    cell(
+                        "Сабақты қорытындылайды. Рефлексия ұйымдастырады."
+                    ),
+
+                    cell(
+                        "Өз жұмысын бағалайды. Кері байланыс береді."
+                    ),
+
+                    cell(
+                        "Өзін-өзі бағалау"
+                    ),
+
+                    cell(
+                        "Рефлексия парағы"
+                    )
+                ]
+            })
+        ]
+    });
+
+
+    const documentFile = new Document({
+
+        sections: [{
+
+            properties: {},
+
+            children: [
+
+                new Paragraph({
+                    text: "ҚЫСҚА МЕРЗІМДІ ЖОСПАР",
+                    heading: HeadingLevel.TITLE,
+                    alignment: AlignmentType.CENTER
+                }),
+
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Пән: ",
+                            bold: true
+                        }),
+                        new TextRun(q.subject)
+                    ]
+                }),
+
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Сынып: ",
+                            bold: true
+                        }),
+                        new TextRun(
+                            q.grade + "-сынып"
+                        )
+                    ]
+                }),
+
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Сабақтың тақырыбы: ",
+                            bold: true
+                        }),
+                        new TextRun(q.topic)
+                    ]
+                }),
+
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Оқу мақсаты: ",
+                            bold: true
+                        }),
+                        new TextRun(q.objective)
+                    ]
+                }),
+
+                new Paragraph({
+                    text: ""
+                }),
+
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Сабақтың мақсаты",
+                            bold: true,
+                            size: 26
+                        })
+                    ]
+                }),
+
+                new Paragraph({
+                    text:
+                        "Оқушылар " +
+                        q.topic +
+                        " тақырыбы бойынша негізгі ұғымдарды меңгереді және алған білімдерін тапсырмалар орындау барысында қолданады."
+                }),
+
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Бағалау критерийлері",
+                            bold: true,
+                            size: 26
+                        })
+                    ]
+                }),
+
+                new Paragraph({
+                    text:
+                        "• Тақырыптың негізгі мазмұнын түсіндіреді;"
+                }),
+
+                new Paragraph({
+                    text:
+                        "• Берілген тапсырмаларды орындайды;"
+                }),
+
+                new Paragraph({
+                    text:
+                        "• Алған білімін практикалық жағдайда қолданады."
+                }),
+
+                new Paragraph({
+                    text: ""
+                }),
+
+                lessonTable,
+
+                new Paragraph({
+                    text: ""
+                }),
+
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Саралау",
+                            bold: true,
+                            size: 26
+                        })
+                    ]
+                }),
+
+                new Paragraph({
+                    text:
+                        "Қолдауды қажет ететін оқушыларға қысқа нұсқаулық пен үлгі беріледі. Қабілеті жоғары оқушыларға күрделендірілген тапсырма ұсынылады."
+                }),
+
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: "Рефлексия",
+                            bold: true,
+                            size: 26
+                        })
+                    ]
+                }),
+
+                new Paragraph({
+                    text:
+                        "«Бағдаршам» әдісі: жасыл — түсіндім, сары — сұрағым бар, қызыл — қосымша көмек қажет."
+                })
+            ]
+        }]
+    });
+
+
+    try {
+
+        const blob =
+            await Packer.toBlob(documentFile);
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+
+        // Файл атауын қауіпсіз ету
+        const safeTopic =
+            q.topic
+                .replace(/[\\/:*?"<>|]/g, "")
+                .substring(0, 50);
+
+        link.download =
+            `ҚМЖ_${q.subject}_${q.grade}_${safeTopic}.docx`;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 1000);
+
+    } catch (error) {
+
+        console.error(
+            "Word жасау қатесі:",
+            error
+        );
+
+        alert(
+            "Word файлын жасау кезінде қате пайда болды."
+        );
+    }
+}
 // Шығу
 document.getElementById("logoutBtn")
 .addEventListener("click",async()=>{
