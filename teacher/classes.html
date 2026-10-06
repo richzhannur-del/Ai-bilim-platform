@@ -170,6 +170,143 @@ main {
     width: 100%;
   }
 }
+/* ===== AI-BILIM CLASS CARD DESIGN ===== */
+
+.classes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 28px;
+}
+
+.class-card {
+  position: relative;
+  background: linear-gradient(145deg, #ffffff 0%, #fffaf2 100%);
+  border: 1px solid #eadccf;
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+
+.class-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: linear-gradient(#b7791f, #07875f);
+}
+
+.class-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+}
+
+.class-card h3 {
+  margin: 0 0 14px;
+  font-size: 26px;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.subject {
+  display: inline-block;
+  color: #854d0e;
+  background: #fff3d6;
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.code-box {
+  margin-top: 8px;
+  padding: 18px 20px;
+  background: #f2f8f6;
+  border: 1px dashed #9bc7b7;
+  border-radius: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.code-box span {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.code-box strong {
+  color: #087f68;
+  font-size: 21px;
+  letter-spacing: 2px;
+}
+
+.class-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.copy-code-btn,
+.open-class-btn {
+  flex: 1;
+  border: none;
+  border-radius: 13px;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.copy-code-btn {
+  background: #f3eadc;
+  color: #87591c;
+}
+
+.copy-code-btn:hover {
+  background: #ead7b5;
+}
+
+.open-class-btn {
+  background: #087f68;
+  color: #ffffff;
+}
+
+.open-class-btn:hover {
+  background: #05694f;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 650px) {
+  .classes {
+    grid-template-columns: 1fr;
+  }
+
+  .class-card {
+    padding: 22px;
+  }
+
+  .code-box {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .class-actions {
+    flex-direction: column;
+  }
+
+  .copy-code-btn,
+  .open-class-btn {
+    width: 100%;
+  }
+}
   </style>
 </head>
 
