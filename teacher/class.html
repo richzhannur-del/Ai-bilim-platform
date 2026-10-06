@@ -448,19 +448,95 @@
 
     <!-- ТАПСЫРМАЛАР -->
 
-    <section class="panel" id="assignments">
+ <section class="panel" id="assignments">
 
-      <h2>📝 Тапсырмалар</h2>
+    <h2>📝 Тапсырмалар</h2>
 
-      <button class="action-btn">
+    <button class="action-btn" id="openAssignmentForm">
         + Тапсырма беру
-      </button>
+    </button>
 
-      <div class="empty">
-        Бұл сыныпқа әзірге тапсырма берілмеген.
-      </div>
+    <!-- ТАПСЫРМА ҚҰРУ ФОРМАСЫ -->
+    <div id="assignmentForm"
+         style="display:none; margin-top:20px; padding:22px;
+                background:#f8fafc; border:1px solid #e2e8f0;
+                border-radius:16px;">
 
-    </section>
+        <h3 style="margin-top:0;">Жаңа тапсырма</h3>
+
+        <label><b>Тапсырма атауы</b></label>
+        <input
+            type="text"
+            id="assignmentTitle"
+            placeholder="Мысалы: Қазақстан тарихы бойынша тест"
+            style="width:100%;padding:13px;margin:8px 0 16px;
+                   border:1px solid #cbd5e1;border-radius:10px;"
+        >
+
+        <label><b>Тапсырма сипаттамасы</b></label>
+        <textarea
+            id="assignmentDescription"
+            placeholder="Оқушыға тапсырманы жазыңыз..."
+            rows="5"
+            style="width:100%;padding:13px;margin:8px 0 16px;
+                   border:1px solid #cbd5e1;border-radius:10px;
+                   resize:vertical;"
+        ></textarea>
+
+        <label><b>Орындау мерзімі</b></label>
+        <input
+            type="datetime-local"
+            id="assignmentDueDate"
+            style="width:100%;padding:13px;margin:8px 0 16px;
+                   border:1px solid #cbd5e1;border-radius:10px;"
+        >
+
+        <label><b>Максималды балл</b></label>
+        <input
+            type="number"
+            id="assignmentMaxScore"
+            value="10"
+            min="1"
+            style="width:100%;padding:13px;margin:8px 0 16px;
+                   border:1px solid #cbd5e1;border-radius:10px;"
+        >
+
+        <label style="display:flex;align-items:center;gap:10px;
+                      margin-bottom:18px;">
+            <input type="checkbox"
+                   id="assignmentPublished"
+                   checked>
+            Оқушыларға бірден жариялау
+        </label>
+
+        <button
+            class="action-btn"
+            id="saveAssignmentBtn">
+            💾 Тапсырманы сақтау
+        </button>
+
+        <button
+            type="button"
+            id="cancelAssignmentBtn"
+            style="margin-left:8px;padding:12px 18px;
+                   border:none;border-radius:10px;cursor:pointer;">
+            Болдырмау
+        </button>
+
+        <div id="assignmentMessage"
+             style="margin-top:15px;font-weight:700;">
+        </div>
+
+    </div>
+
+    <!-- ТАПСЫРМАЛАР ОСЫНДА ШЫҒАДЫ -->
+    <div id="assignmentsList" style="margin-top:20px;">
+        <div class="empty">
+            Бұл сыныпқа әзірге тапсырма берілмеген.
+        </div>
+    </div>
+
+</section>
 
 
     <!-- РЕСУРСТАР -->
@@ -899,8 +975,291 @@ async function loadStudents(classId) {
   });
 
 }
+    }   // бұрынғы функцияның соңы
 
+
+// ТАПСЫРМАЛАРМЕН ЖҰМЫС
+const openAssignmentForm =
+    document.getElementById("openAssignmentForm");
+
+const assignmentForm =
+    document.getElementById("assignmentForm");
+
+const cancelAssignmentBtn =
+    document.getElementById("cancelAssignmentBtn");
+
+const saveAssignmentBtn =
+    document.getElementById("saveAssignmentBtn");
+
+const assignmentMessage =
+    document.getElementById("assignmentMessage");
+
+
+// ФОРМАНЫ АШУ
+openAssignmentForm.addEventListener("click", () => {
+    assignmentForm.style.display = "block";
+    assignmentMessage.textContent = "";
+});
+
+
+// ФОРМАНЫ ЖАБУ
+cancelAssignmentBtn.addEventListener("click", () => {
+    assignmentForm.style.display = "none";
+    assignmentMessage.textContent = "";
+});
+
+
+// ТАПСЫРМАНЫ САҚТАУ
+saveAssignmentBtn.addEventListener("click", async () => {
+
+    const title =
+        document.getElementById("assignmentTitle").value.trim();
+
+    const description =
+        document.getElementById("assignmentDescription").value.trim();
+
+    const dueDate =
+        document.getElementById("assignmentDueDate").value;
+
+    const maxScore =
+        Number(document.getElementById("assignmentMaxScore").value);
+
+    const isPublished =
+        document.getElementById("assignmentPublished").checked;
+
+
+    if (!title) {
+        assignmentMessage.style.color = "#dc2626";
+        assignmentMessage.textContent =
+            "Тапсырма атауын енгізіңіз.";
+        return;
+    }
+
+
+    // Қолданушыны анықтау
+    const {
+        data: { user },
+        error: userError
+    } = await sb.auth.getUser();
+
+
+    if (userError || !user) {
+        assignmentMessage.style.color = "#dc2626";
+        assignmentMessage.textContent =
+            "Мұғалім аккаунты анықталмады.";
+        return;
+    }
+
+
+    // URL ішінен сынып ID алу
+    const params =
+        new URLSearchParams(window.location.search);
+
+    const classId =
+        params.get("id");
+
+
+    if (!classId) {
+        assignmentMessage.style.color = "#dc2626";
+        assignmentMessage.textContent =
+            "Сынып ID табылмады.";
+        return;
+    }
+
+
+    saveAssignmentBtn.disabled = true;
+    saveAssignmentBtn.textContent = "Сақталуда...";
+
+
+    const { error } = await sb
+        .from("assignments")
+        .insert({
+            class_id: classId,
+            teacher_id: user.id,
+            title: title,
+            description: description || null,
+            due_date: dueDate || null,
+            max_score: maxScore || 10,
+            is_published: isPublished
+        });
+
+
+    saveAssignmentBtn.disabled = false;
+    saveAssignmentBtn.textContent =
+        "💾 Тапсырманы сақтау";
+
+
+    if (error) {
+
+        console.error("Assignment insert error:", error);
+
+        assignmentMessage.style.color = "#dc2626";
+
+        assignmentMessage.textContent =
+            "Тапсырманы сақтау кезінде қате шықты: "
+            + error.message;
+
+        return;
+    }
+
+
+    assignmentMessage.style.color = "#059669";
+
+    assignmentMessage.textContent =
+        "✅ Тапсырма сәтті сақталды!";
+
+
+    // Форманы тазалау
+    document.getElementById("assignmentTitle").value = "";
+
+    document.getElementById("assignmentDescription").value = "";
+
+    document.getElementById("assignmentDueDate").value = "";
+
+    document.getElementById("assignmentMaxScore").value = "10";
+
+    document.getElementById("assignmentPublished").checked = true;
+
+
+    // тапсырмалар тізімін жаңарту
+    await loadAssignments();
+
+
+    setTimeout(() => {
+        assignmentForm.style.display = "none";
+        assignmentMessage.textContent = "";
+    }, 1200);
+
+});
+
+
+// ТАПСЫРМАЛАРДЫ ЖҮКТЕУ
+async function loadAssignments() {
+
+    const assignmentsList =
+        document.getElementById("assignmentsList");
+
+    const params =
+        new URLSearchParams(window.location.search);
+
+    const classId =
+        params.get("id");
+
+
+    if (!classId) return;
+
+
+    const { data: assignments, error } = await sb
+        .from("assignments")
+        .select("*")
+        .eq("class_id", classId)
+        .order("created_at", {
+            ascending: false
+        });
+
+
+    if (error) {
+
+        console.error(
+            "Assignments load error:",
+            error
+        );
+
+        assignmentsList.innerHTML =
+            '<div class="empty">Тапсырмаларды жүктеу мүмкін болмады.</div>';
+
+        return;
+    }
+
+
+    if (!assignments || assignments.length === 0) {
+
+        assignmentsList.innerHTML =
+            '<div class="empty">Бұл сыныпқа әзірге тапсырма берілмеген.</div>';
+
+        return;
+    }
+
+
+    assignmentsList.innerHTML = "";
+
+
+    assignments.forEach(item => {
+
+        const card =
+            document.createElement("div");
+
+        card.style.cssText = `
+            background:#ffffff;
+            border:1px solid #e2e8f0;
+            border-radius:14px;
+            padding:18px;
+            margin-bottom:12px;
+        `;
+
+
+        const title =
+            document.createElement("h3");
+
+        title.textContent =
+            "📝 " + item.title;
+
+
+        const description =
+            document.createElement("p");
+
+        description.textContent =
+            item.description ||
+            "Сипаттама берілмеген.";
+
+
+        const info =
+            document.createElement("div");
+
+        info.style.cssText = `
+            margin-top:12px;
+            color:#64748b;
+            font-size:14px;
+        `;
+
+
+        const due =
+            item.due_date
+                ? new Date(item.due_date).toLocaleString("kk-KZ")
+                : "мерзім көрсетілмеген";
+
+
+        info.textContent =
+            `⏰ ${due}  •  ⭐ ${item.max_score} балл`;
+
+
+        const status =
+            document.createElement("div");
+
+        status.style.cssText = `
+            margin-top:10px;
+            font-weight:700;
+            color:${item.is_published ? "#059669" : "#d97706"};
+        `;
+
+        status.textContent =
+            item.is_published
+                ? "🟢 Оқушыларға жарияланған"
+                : "🟡 Жоба ретінде сақталған";
+
+
+        card.appendChild(title);
+        card.appendChild(description);
+        card.appendChild(info);
+        card.appendChild(status);
+
+        assignmentsList.appendChild(card);
+
+    });
+
+}
 initClassPage();
+  loadAssignments();
 
 </script>
 
