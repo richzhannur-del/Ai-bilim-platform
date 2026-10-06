@@ -870,6 +870,128 @@ document
 init();
 
 </script>
+<!-- SOS БАТЫРМАСЫ -->
+<div id="sosBox" style="
+    position:fixed;
+    right:25px;
+    bottom:25px;
+    z-index:9999;
+    text-align:center;
+">
+    <button id="sosBtn" type="button" style="
+        width:100px;
+        height:100px;
+        border:none;
+        border-radius:50%;
+        background:#dc2626;
+        color:white;
+        font-size:20px;
+        font-weight:800;
+        cursor:pointer;
+        box-shadow:0 8px 25px rgba(220,38,38,.4);
+    ">
+        🆘<br>SOS
+    </button>
 
+    <div id="sosMessage" style="
+        margin-top:8px;
+        max-width:220px;
+        font-size:14px;
+        font-weight:700;
+    "></div>
+</div>
+  <script>
+const sosBtn = document.getElementById("sosBtn");
+const sosMessage = document.getElementById("sosMessage");
+
+sosBtn.addEventListener("click", async () => {
+
+    const confirmSOS = confirm(
+        "🆘 SOS хабарламасын мұғалімге жібересіз бе?"
+    );
+
+    if (!confirmSOS) return;
+
+    sosBtn.disabled = true;
+    sosBtn.textContent = "Жіберілуде...";
+
+    try {
+
+        // 1. Қазіргі оқушыны анықтау
+        const {
+            data: { user },
+            error: userError
+        } = await sb.auth.getUser();
+
+        if (userError || !user) {
+            throw new Error("Оқушы аккаунты анықталмады.");
+        }
+
+        // 2. Оқушының сыныбын табу
+        const { data: membership, error: memberError } = await sb
+            .from("class_members")
+            .select("class_id")
+            .eq("student_id", user.id)
+            .limit(1)
+            .maybeSingle();
+
+        if (memberError) throw memberError;
+
+        if (!membership) {
+            throw new Error("Сіз әлі сыныпқа тіркелмегенсіз.");
+        }
+
+        // 3. Сол сыныптың мұғалімін анықтау
+        const { data: classData, error: classError } = await sb
+            .from("classes")
+            .select("id, teacher_id")
+            .eq("id", membership.class_id)
+            .single();
+
+        if (classError) throw classError;
+
+        if (!classData || !classData.teacher_id) {
+            throw new Error("Сынып мұғалімі анықталмады.");
+        }
+
+        // 4. SOS хабарламасын сақтау
+        const { error: sosError } = await sb
+            .from("sos_alerts")
+            .insert({
+                student_id: user.id,
+                class_id: membership.class_id,
+                teacher_id: classData.teacher_id,
+                message: "Оқушыға шұғыл көмек қажет",
+                status: "active"
+            });
+
+        if (sosError) throw sosError;
+
+        // 5. Оқушыға нәтиже көрсету
+        sosMessage.style.color = "#059669";
+        sosMessage.textContent =
+            "✅ SOS мұғалімге жіберілді.";
+
+        sosBtn.textContent = "✓ Жіберілді";
+
+        setTimeout(() => {
+            sosBtn.disabled = false;
+            sosBtn.innerHTML = "🆘<br>SOS";
+            sosMessage.textContent = "";
+        }, 5000);
+
+    } catch (error) {
+
+        console.error("SOS error:", error);
+
+        sosMessage.style.color = "#dc2626";
+        sosMessage.textContent =
+            "❌ " + (error.message || "SOS жіберілмеді.");
+
+        sosBtn.disabled = false;
+        sosBtn.innerHTML = "🆘<br>SOS";
+    }
+});
+</script>
 </body>
 </html>
