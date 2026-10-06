@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сынып кабинеті | AI-BILIM</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #0f172a;
+    }
+
+    header {
+      height: 76px;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 42px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      color: #071b3d;
+    }
+
+    .back {
+      text-decoration: none;
+      color: #087f68;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    main {
+      width: min(1180px, 92%);
+      margin: 38px auto;
+    }
+
+    .loading {
+      background: white;
+      padding: 45px;
+      border-radius: 22px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    .class-header {
+      position: relative;
+      overflow: hidden;
+      padding: 32px;
+      border-radius: 26px;
+      background:
+        linear-gradient(135deg, #ffffff 0%, #fffaf2 60%, #eefaf6 100%);
+      border: 1px solid #eadfcf;
+      box-shadow: 0 15px 35px rgba(15, 23, 42, 0.07);
+      margin-bottom: 25px;
+    }
+
+    .class-header::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 7px;
+      background: linear-gradient(#c58b28, #07966f);
+    }
+
+    .class-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .class-title {
+      margin: 0;
+      font-size: 36px;
+      color: #071b3d;
+    }
+
+    .subject {
+      display: inline-block;
+      margin-top: 12px;
+      background: #fff0cf;
+      color: #8a5818;
+      padding: 10px 15px;
+      border-radius: 14px;
+      font-weight: 700;
+    }
+
+    .class-code {
+      min-width: 220px;
+      background: #f2faf7;
+      border: 1px dashed #8ac9b8;
+      border-radius: 16px;
+      padding: 15px 18px;
+    }
+
+    .class-code span {
+      display: block;
+      color: #64748b;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .class-code strong {
+      color: #087f68;
+      font-size: 22px;
+      letter-spacing: 2px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .stat {
+      background: white;
+      border: 1px solid #e7e1d8;
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 8px 22px rgba(15,23,42,.04);
+    }
+
+    .stat-icon {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    .stat-number {
+      font-size: 29px;
+      font-weight: 800;
+      color: #071b3d;
+    }
+
+    .stat-label {
+      color: #64748b;
+      margin-top: 5px;
+    }
+
+    .tabs {
+      background: white;
+      border-radius: 22px;
+      padding: 12px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      border: 1px solid #e7e1d8;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 13px 18px;
+      border-radius: 13px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      color: #475569;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      background: #f3f6fb;
+    }
+
+    .tab-btn.active {
+      background: #087f68;
+      color: white;
+    }
+
+    .panel {
+      display: none;
+      background: white;
+      border-radius: 22px;
+      border: 1px solid #e7e1d8;
+      padding: 28px;
+      min-height: 270px;
+      box-shadow: 0 8px 25px rgba(15,23,42,.04);
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      color: #071b3d;
+    }
+
+    .empty {
+      padding: 35px 20px;
+      text-align: center;
+      color: #64748b;
+      background: #f8fafc;
+      border-radius: 16px;
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      border: none;
+      background: #087f68;
+      color: white;
+      padding: 13px 20px;
+      border-radius: 13px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      background: #05694f;
+    }
+
+    .inclusive-box {
+      background: linear-gradient(135deg, #f1faf7, #fffaf1);
+      border: 1px solid #cce8df;
+      border-radius: 20px;
+      padding: 22px;
+      margin-top: 18px;
+    }
+
+    .inclusive-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .feature {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .feature h3 {
+      margin-top: 0;
+    }
+
+    .sos-btn {
+      display: inline-block;
+      text-decoration: none;
+      border: none;
+      background: #dc2626;
+      color: white;
+      font-size: 18px;
+      font-weight: 800;
+      padding: 14px 24px;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .sos-btn:hover {
+      background: #b91c1c;
+    }
+
+    .camera-btn {
+      border: none;
+      background: #071b3d;
+      color: white;
+      padding: 13px 20px;
+      border-radius: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .notice {
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    #message {
+      margin-top: 15px;
+      color: #b91c1c;
+    }
+
+    @media (max-width: 850px) {
+      header {
+        padding: 0 20px;
+      }
+
+      main {
+        margin-top: 25px;
+      }
+
+      .class-top {
+        flex-direction: column;
+      }
+
+      .class-code {
+        width: 100%;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .inclusive-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .class-title {
+        font-size: 28px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .class-header,
+      .panel {
+        padding: 20px;
+      }
+
+      .logo {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">AI-BILIM</div>
+  <a href="classes.html" class="back">← Сыныптарға қайту</a>
+</header>
+
+<main>
+
+  <div id="loading" class="loading">
+    Сынып мәліметтері жүктелуде...
+  </div>
+
+  <div id="classContent" style="display:none;">
+
+    <section class="class-header">
+
+      <div class="class-top">
+
+        <div>
+          <h1 class="class-title" id="className">🏫 Сынып</h1>
+          <div class="subject" id="classSubject">📚 Пән</div>
+        </div>
+
+        <div class="class-code">
+          <span>Оқушыға қосылу коды</span>
+          <strong id="classCode">—</strong>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="stats">
+
+      <div class="stat">
+        <div class="stat-icon">👥</div>
+        <div class="stat-number" id="studentCount">0</div>
+        <div class="stat-label">Оқушы</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-icon">📝</div>
+        <div class="stat-number">0</div>
+        <div class="stat-label">Тапсырма</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-icon">📚</div>
+        <div class="stat-number">0</div>
+        <div class="stat-label">Ресурс</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-icon">📊</div>
+        <div class="stat-number">—</div>
+        <div class="stat-label">Орташа нәтиже</div>
+      </div>
+
+    </section>
+
+    <nav class="tabs">
+
+      <button class="tab-btn active"
+              data-tab="students">
+        👥 Оқушылар
+      </button>
+
+      <button class="tab-btn"
+              data-tab="assignments">
+        📝 Тапсырмалар
+      </button>
+
+      <button class="tab-btn"
+              data-tab="resources">
+        📚 Ресурстар
+      </button>
+
+      <button class="tab-btn"
+              data-tab="results">
+        📊 Нәтижелер
+      </button>
+
+      <button class="tab-btn"
+              data-tab="inclusive">
+        🧩 Инклюзивті қолдау
+      </button>
+
+    </nav>
+
+    <!-- ОҚУШЫЛАР -->
+
+    <section class="panel active" id="students">
+
+      <h2>👥 Сынып оқушылары</h2>
+
+      <p>
+        Оқушылар сыныптың қосылу коды арқылы
+        осы сыныпқа тіркеле алады.
+      </p>
+
+      <div class="empty" id="studentsList">
+        Сыныпта әзірге оқушы жоқ.
+      </div>
+
+    </section>
+
+
+    <!-- ТАПСЫРМАЛАР -->
+
+    <section class="panel" id="assignments">
+
+      <h2>📝 Тапсырмалар</h2>
+
+      <button class="action-btn">
+        + Тапсырма беру
+      </button>
+
+      <div class="empty">
+        Бұл сыныпқа әзірге тапсырма берілмеген.
+      </div>
+
+    </section>
+
+
+    <!-- РЕСУРСТАР -->
+
+    <section class="panel" id="resources">
+
+      <h2>📚 Сынып ресурстары</h2>
+
+      <button class="action-btn">
+        + Ресурс қосу
+      </button>
+
+      <div class="empty">
+        Сыныпқа ресурс әлі тіркелмеген.
+      </div>
+
+    </section>
+
+
+    <!-- НӘТИЖЕЛЕР -->
+
+    <section class="panel" id="results">
+
+      <h2>📊 Оқу нәтижелері</h2>
+
+      <div class="empty">
+        Оқушылар тапсырмаларды орындағаннан кейін
+        нәтижелер осы жерде көрсетіледі.
+      </div>
+
+    </section>
+
+
+    <!-- ИНКЛЮЗИВТІ ҚОЛДАУ -->
+
+    <section class="panel" id="inclusive">
+
+      <h2>🧩 Инклюзивті қолдау</h2>
+
+      <p>
+        Оқушының оқу барысын бақылауға және
+        қажет кезде жылдам қолдау көрсетуге арналған бөлім.
+      </p>
+
+      <div class="inclusive-box">
+
+        <div class="inclusive-grid">
+
+          <div class="feature">
+
+            <h3>📷 Камера арқылы бақылау</h3>
+
+            <p class="notice">
+              Камера тек пайдаланушының рұқсатымен қосылады.
+              Болашақта бұл бөлім оқушының көрінетін мінез-құлқындағы
+              өзгерістерді мұғалімге көмекші сигнал ретінде көрсетуге
+              арналған.
+            </p>
+
+            <button class="camera-btn"
+                    onclick="startCamera()">
+              📷 Камераны қосу
+            </button>
+
+            <p id="cameraStatus"
+               class="notice">
+              Камера өшірулі
+            </p>
+
+          </div>
+
+
+          <div class="feature">
+
+            <h3>🆘 SOS көмек</h3>
+
+            <p class="notice">
+              Қажет жағдайда мұғаліммен жылдам байланысуға
+              арналған батырма.
+            </p>
+
+            <!-- Телефон нөмірін кейін базаға қосамыз -->
+            <button class="sos-btn"
+                    onclick="sosInfo()">
+              🆘 SOS
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <div id="message"></div>
+
+  </div>
+
+</main>
+
+
+<script src="../js/config.js"></script>
+
+<script>
+
+let currentUser = null;
+let currentClass = null;
+
+
+/* ================================
+   АВТОРИЗАЦИЯ + СЫНЫПТЫ ЖҮКТЕУ
+================================ */
+
+async function initClassPage() {
+
+  const loading =
+    document.getElementById("loading");
+
+  const content =
+    document.getElementById("classContent");
+
+
+  const {
+    data: { user },
+    error: userError
+  } = await sb.auth.getUser();
+
+
+  if (userError || !user) {
+
+    window.location.href =
+      "../login.html";
+
+    return;
+  }
+
+
+  currentUser = user;
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const classId =
+    params.get("id");
+
+
+  if (!classId) {
+
+    loading.textContent =
+      "Сынып ID табылмады.";
+
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } = await sb
+    .from("classes")
+    .select("*")
+    .eq("id", classId)
+    .single();
+
+
+  if (error || !data) {
+
+    console.error(error);
+
+    loading.textContent =
+      "Сынып мәліметтерін жүктеу мүмкін болмады.";
+
+    return;
+  }
+
+
+  /*
+   Мұғалім өз сыныбын ғана ашады
+  */
+
+  if (data.teacher_id !== user.id) {
+
+    loading.textContent =
+      "Бұл сыныпқа кіруге рұқсатыңыз жоқ.";
+
+    return;
+  }
+
+
+  currentClass = data;
+
+
+  document.getElementById("className")
+    .textContent =
+      "🏫 " + (data.name || "Сынып");
+
+
+  document.getElementById("classSubject")
+    .textContent =
+      "📚 " + (data.subject || "Пән");
+
+
+  document.getElementById("classCode")
+    .textContent =
+      data.class_code || "—";
+
+
+  loading.style.display =
+    "none";
+
+
+  content.style.display =
+    "block";
+
+
+  /*
+   Келесі кезеңде осы жерде
+   оқушылар санын Supabase-тан аламыз
+  */
+
+}
+
+
+/* ================================
+   TAB БАТЫРМАЛАРЫ
+================================ */
+
+document
+  .querySelectorAll(".tab-btn")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      function() {
+
+        const tab =
+          this.dataset.tab;
+
+
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach(btn =>
+            btn.classList.remove("active")
+          );
+
+
+        document
+          .querySelectorAll(".panel")
+          .forEach(panel =>
+            panel.classList.remove("active")
+          );
+
+
+        this.classList.add("active");
+
+
+        document
+          .getElementById(tab)
+          .classList.add("active");
+
+      }
+    );
+
+  });
+
+
+/* ================================
+   КАМЕРА
+================================ */
+
+async function startCamera() {
+
+  const status =
+    document.getElementById(
+      "cameraStatus"
+    );
+
+
+  if (!navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia) {
+
+    status.textContent =
+      "Бұл браузер камераны қолдамайды.";
+
+    return;
+  }
+
+
+  try {
+
+    const stream =
+      await navigator.mediaDevices
+        .getUserMedia({
+          video: true,
+          audio: false
+        });
+
+
+    status.textContent =
+      "Камера қосылды ✓";
+
+
+    /*
+      Қазір камераға рұқсатты
+      тек тексеріп отырмыз.
+
+      Келесі кезеңде video элементін
+      және қауіпсіз бақылау интерфейсін
+      қосамыз.
+    */
+
+
+    stream
+      .getTracks()
+      .forEach(track =>
+        track.stop()
+      );
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      "Камераға рұқсат берілмеді.";
+
+  }
+
+}
+
+
+/* ================================
+   SOS
+================================ */
+
+function sosInfo() {
+
+  alert(
+    "SOS жүйесіне мұғалімнің байланыс нөмірін келесі кезеңде қосамыз."
+  );
+
+}
+
+
+initClassPage();
+
+</script>
+
+</body>
+</html>
