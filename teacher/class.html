@@ -681,10 +681,7 @@ async function initClassPage() {
     "block";
 
 
-  /*
-   Келесі кезеңде осы жерде
-   оқушылар санын Supabase-тан аламыз
-  */
+ await loadStudents(classId);
 
 }
 
@@ -808,7 +805,100 @@ function sosInfo() {
   );
 
 }
+async function loadStudents(classId) {
 
+  const studentCount =
+    document.getElementById("studentCount");
+
+  const studentsList =
+    document.getElementById("studentsList");
+
+  const { data: members, error } = await sb
+    .from("class_members")
+    .select("student_id, joined_at")
+    .eq("class_id", classId);
+
+  if (error) {
+    console.error("Оқушыларды жүктеу қатесі:", error);
+
+    studentsList.textContent =
+      "Оқушыларды жүктеу мүмкін болмады.";
+
+    return;
+  }
+
+  studentCount.textContent = members?.length || 0;
+
+  if (!members || members.length === 0) {
+    studentsList.textContent =
+      "Сыныпта әзірге оқушы жоқ.";
+    return;
+  }
+
+  const studentIds =
+    members.map(member => member.student_id);
+
+  const { data: profiles, error: profileError } = await sb
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", studentIds);
+
+  if (profileError) {
+    console.error(
+      "Оқушы профильдерін жүктеу қатесі:",
+      profileError
+    );
+
+    studentsList.textContent =
+      "Оқушы профильдерін жүктеу мүмкін болмады.";
+
+    return;
+  }
+
+  studentsList.innerHTML = "";
+
+  members.forEach(member => {
+
+    const profile =
+      profiles?.find(
+        p => p.id === member.student_id
+      );
+
+    const studentCard =
+      document.createElement("div");
+
+    studentCard.style.cssText = `
+      background:#ffffff;
+      border:1px solid #e2e8f0;
+      border-radius:14px;
+      padding:16px 18px;
+      margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      text-align:left;
+    `;
+
+    const icon =
+      document.createElement("span");
+
+    icon.textContent = "👨‍🎓";
+    icon.style.fontSize = "25px";
+
+    const name =
+      document.createElement("strong");
+
+    name.textContent =
+      profile?.full_name || "Оқушы";
+
+    studentCard.appendChild(icon);
+    studentCard.appendChild(name);
+
+    studentsList.appendChild(studentCard);
+
+  });
+
+}
 
 initClassPage();
 
