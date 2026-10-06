@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Сынып | AI-BILIM</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      color: #0f172a;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .back {
+      color: #047857;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    main {
+      width: min(1180px, 92%);
+      margin: 35px auto 100px;
+    }
+
+    .class-header {
+      background: linear-gradient(135deg, #ffffff, #f0fdf9);
+      border: 1px solid #d8e8df;
+      border-radius: 24px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 30px rgba(15,23,42,.05);
+    }
+
+    .class-header h1 {
+      margin: 0 0 12px;
+      font-size: 34px;
+    }
+
+    .subject {
+      display: inline-block;
+      padding: 9px 14px;
+      background: #fff3d6;
+      color: #92400e;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .tabs {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 12px;
+      margin-bottom: 22px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 13px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #059669;
+      color: white;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .section {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 22px;
+      padding: 28px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      font-size: 27px;
+    }
+
+    .assignment-card,
+    .resource-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 15px;
+      background: white;
+    }
+
+    .assignment-card h3,
+    .resource-card h3 {
+      margin: 0 0 10px;
+    }
+
+    .description {
+      color: #475569;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .info {
+      margin-top: 14px;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .published {
+      margin-top: 12px;
+      color: #059669;
+      font-weight: 700;
+    }
+
+    .open-btn {
+      margin-top: 16px;
+      border: none;
+      background: #059669;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .empty {
+      padding: 35px 20px;
+      text-align: center;
+      background: #f8fafc;
+      border-radius: 16px;
+      color: #64748b;
+    }
+
+    #loading {
+      background: white;
+      border-radius: 22px;
+      padding: 45px;
+      text-align: center;
+      color: #64748b;
+    }
+
+    /* SOS */
+
+    .sos-btn {
+      position: fixed;
+      right: 25px;
+      bottom: 25px;
+      width: 78px;
+      height: 78px;
+      border: none;
+      border-radius: 50%;
+      background: #dc2626;
+      color: white;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(220,38,38,.35);
+      z-index: 1000;
+    }
+
+    .sos-btn:hover {
+      background: #b91c1c;
+      transform: scale(1.05);
+    }
+
+    .sos-message {
+      position: fixed;
+      right: 25px;
+      bottom: 115px;
+      width: min(340px, calc(100% - 40px));
+      background: white;
+      border: 1px solid #fecaca;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 15px 40px rgba(15,23,42,.18);
+      display: none;
+      z-index: 1001;
+    }
+
+    .sos-message h3 {
+      margin-top: 0;
+      color: #b91c1c;
+    }
+
+    .sos-message p {
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .sos-close {
+      border: none;
+      background: #e2e8f0;
+      padding: 9px 14px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    @media(max-width:700px) {
+      main {
+        width: 94%;
+        margin-top: 22px;
+      }
+
+      .class-header {
+        padding: 22px;
+      }
+
+      .class-header h1 {
+        font-size: 27px;
+      }
+
+      .section {
+        padding: 20px;
+      }
+
+      .sos-btn {
+        width: 68px;
+        height: 68px;
+        right: 18px;
+        bottom: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">AI-BILIM</div>
+
+  <a href="dashboard.html" class="back">
+    ← Кабинетке қайту
+  </a>
+</header>
+
+<main>
+
+  <div id="loading">
+    Сынып мәліметтері жүктелуде...
+  </div>
+
+  <div id="content" style="display:none;">
+
+    <section class="class-header">
+      <h1 id="className">🏫 Сынып</h1>
+      <div class="subject" id="classSubject">📚 Пән</div>
+    </section>
+
+    <nav class="tabs">
+
+      <button
+        class="tab-btn active"
+        data-tab="assignments"
+        type="button">
+        📝 Тапсырмалар
+      </button>
+
+      <button
+        class="tab-btn"
+        data-tab="resources"
+        type="button">
+        📚 Ресурстар
+      </button>
+
+    </nav>
+
+    <section
+      id="assignments"
+      class="panel active">
+
+      <div class="section">
+
+        <h2>📝 Мұғалім берген тапсырмалар</h2>
+
+        <div id="assignmentsList">
+          <div class="empty">
+            Тапсырмалар жүктелуде...
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section
+      id="resources"
+      class="panel">
+
+      <div class="section">
+
+        <h2>📚 Оқу ресурстары</h2>
+
+        <div id="resourcesList">
+
+          <div class="empty">
+            Мұғалім әзірге ресурс жарияламаған.
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+</main>
+
+
+<!-- SOS -->
+<button
+  id="sosBtn"
+  class="sos-btn"
+  type="button"
+  title="Көмек сұрау">
+  🆘<br>SOS
+</button>
+
+
+<div
+  id="sosMessage"
+  class="sos-message">
+
+  <h3>🆘 Көмек қажет пе?</h3>
+
+  <p>
+    SOS батырмасы жұмыс істейді.
+    Келесі кезеңде бұл хабарлама
+    мұғалім кабинетіне жіберіледі.
+  </p>
+
+  <button
+    id="sosClose"
+    class="sos-close"
+    type="button">
+    Жабу
+  </button>
+
+</div>
+
+
+<script src="../js/config.js"></script>
+
+<script>
+
+let currentUser = null;
+let currentClassId = null;
+
+
+/* =========================
+   ПАРАҚТЫ ІСКЕ ҚОСУ
+========================= */
+
+async function init() {
+
+  const params =
+    new URLSearchParams(window.location.search);
+
+  currentClassId =
+    params.get("id");
+
+
+  if (!currentClassId) {
+
+    showError(
+      "Сынып ID табылмады. Оқушы кабинетіне қайта кіріңіз."
+    );
+
+    return;
+  }
+
+
+  const {
+    data: { user },
+    error
+  } = await sb.auth.getUser();
+
+
+  if (error || !user) {
+
+    window.location.href =
+      "../login.html";
+
+    return;
+  }
+
+
+  currentUser = user;
+
+
+  /* Оқушы осы сыныпқа тіркелген бе */
+
+  const {
+    data: membership,
+    error: membershipError
+  } = await sb
+    .from("class_members")
+    .select("id")
+    .eq("class_id", currentClassId)
+    .eq("student_id", currentUser.id)
+    .maybeSingle();
+
+
+  if (membershipError) {
+
+    console.error(
+      "Membership error:",
+      membershipError
+    );
+
+    showError(
+      "Сыныпқа кіру құқығын тексеру мүмкін болмады."
+    );
+
+    return;
+  }
+
+
+  if (!membership) {
+
+    showError(
+      "Сіз бұл сыныпқа тіркелмегенсіз."
+    );
+
+    return;
+  }
+
+
+  await loadClass();
+
+  await loadAssignments();
+
+}
+
+
+/* =========================
+   СЫНЫП
+========================= */
+
+async function loadClass() {
+
+  const {
+    data,
+    error
+  } = await sb
+    .from("classes")
+    .select("id, name, subject")
+    .eq("id", currentClassId)
+    .single();
+
+
+  if (error || !data) {
+
+    console.error(
+      "Class load error:",
+      error
+    );
+
+    showError(
+      "Сынып мәліметтерін жүктеу мүмкін болмады."
+    );
+
+    return;
+  }
+
+
+  document
+    .getElementById("className")
+    .textContent =
+      "🏫 " + (data.name || "Сынып");
+
+
+  document
+    .getElementById("classSubject")
+    .textContent =
+      "📚 " + (data.subject || "Пән");
+
+
+  document
+    .getElementById("loading")
+    .style.display = "none";
+
+
+  document
+    .getElementById("content")
+    .style.display = "block";
+
+}
+
+
+/* =========================
+   ТАПСЫРМАЛАР
+========================= */
+
+async function loadAssignments() {
+
+  const list =
+    document.getElementById(
+      "assignmentsList"
+    );
+
+
+  const {
+    data,
+    error
+  } = await sb
+    .from("assignments")
+    .select("*")
+    .eq(
+      "class_id",
+      currentClassId
+    )
+    .eq(
+      "is_published",
+      true
+    )
+    .order(
+      "created_at",
+      { ascending: false }
+    );
+
+
+  if (error) {
+
+    console.error(
+      "Assignments error:",
+      error
+    );
+
+    list.innerHTML = `
+      <div class="empty">
+        Тапсырмаларды жүктеу мүмкін болмады.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  if (!data || data.length === 0) {
+
+    list.innerHTML = `
+      <div class="empty">
+        📝 Мұғалім әзірге тапсырма жарияламаған.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  list.innerHTML = "";
+
+
+  data.forEach(item => {
+
+    const card =
+      document.createElement("div");
+
+    card.className =
+      "assignment-card";
+
+
+    const title =
+      document.createElement("h3");
+
+    title.textContent =
+      "📝 " +
+      (item.title || "Тапсырма");
+
+
+    const description =
+      document.createElement("div");
+
+    description.className =
+      "description";
+
+    description.textContent =
+      item.description ||
+      "Сипаттама берілмеген.";
+
+
+    const info =
+      document.createElement("div");
+
+    info.className = "info";
+
+
+    const due =
+      item.due_date
+        ? new Date(
+            item.due_date
+          ).toLocaleString(
+            "kk-KZ"
+          )
+        : "Мерзім көрсетілмеген";
+
+
+    info.textContent =
+      `⏰ ${due} • ⭐ ${item.max_score || 10} балл`;
+
+
+    const status =
+      document.createElement("div");
+
+    status.className =
+      "published";
+
+    status.textContent =
+      "🟢 Мұғалім жариялаған";
+
+
+    const button =
+      document.createElement("button");
+
+    button.className =
+      "open-btn";
+
+    button.type = "button";
+
+    button.textContent =
+      "Тапсырманы ашу →";
+
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        alert(
+          "Келесі кезеңде осы жерде тапсырманы орындау формасын қосамыз."
+        );
+
+      }
+    );
+
+
+    card.appendChild(title);
+    card.appendChild(description);
+    card.appendChild(info);
+    card.appendChild(status);
+    card.appendChild(button);
+
+    list.appendChild(card);
+
+  });
+
+}
+
+
+/* =========================
+   TAB
+========================= */
+
+document
+  .querySelectorAll(".tab-btn")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        document
+          .querySelectorAll(
+            ".tab-btn"
+          )
+          .forEach(btn =>
+            btn.classList.remove(
+              "active"
+            )
+          );
+
+
+        document
+          .querySelectorAll(
+            ".panel"
+          )
+          .forEach(panel =>
+            panel.classList.remove(
+              "active"
+            )
+          );
+
+
+        button.classList.add(
+          "active"
+        );
+
+
+        document
+          .getElementById(
+            button.dataset.tab
+          )
+          .classList.add(
+            "active"
+          );
+
+      }
+    );
+
+  });
+
+
+/* =========================
+   SOS
+========================= */
+
+const sosBtn =
+  document.getElementById(
+    "sosBtn"
+  );
+
+const sosMessage =
+  document.getElementById(
+    "sosMessage"
+  );
+
+
+sosBtn.addEventListener(
+  "click",
+  () => {
+
+    sosMessage.style.display =
+      "block";
+
+  }
+);
+
+
+document
+  .getElementById("sosClose")
+  .addEventListener(
+    "click",
+    () => {
+
+      sosMessage.style.display =
+        "none";
+
+    }
+  );
+
+
+/* =========================
+   ERROR
+========================= */
+
+function showError(message) {
+
+  const loading =
+    document.getElementById(
+      "loading"
+    );
+
+  loading.textContent =
+    message;
+
+  loading.style.color =
+    "#be123c";
+
+}
+
+
+/* START */
+
+init();
+
+</script>
+
+</body>
+</html>
