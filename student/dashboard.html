@@ -555,7 +555,70 @@ async function loadStudentAssignments() {
 
                 </div>
             `;
+// Деңгейлік интерактивті тапсырма болса
+if (task.activity_type === "level" && task.activity_data) {
 
+    const actionBox = document.createElement("div");
+
+    actionBox.style.cssText = `
+        margin-top:16px;
+        padding-top:16px;
+        border-top:1px solid #e2e8f0;
+    `;
+
+    actionBox.innerHTML = `
+        <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:15px;
+            flex-wrap:wrap;
+        ">
+
+            <div>
+                <div style="
+                    font-weight:700;
+                    color:#0f172a;
+                    margin-bottom:4px;
+                ">
+                    🧠 Интерактивті деңгейлік тапсырма
+                </div>
+
+                <div style="
+                    font-size:13px;
+                    color:#64748b;
+                ">
+                    A → B → C деңгейлері •
+                    ${(task.activity_data.questions || []).length} тапсырма
+                </div>
+            </div>
+
+            <button
+                type="button"
+                style="
+                    border:none;
+                    background:#0f766e;
+                    color:white;
+                    padding:11px 20px;
+                    border-radius:10px;
+                    font-weight:700;
+                    cursor:pointer;
+                "
+            >
+                ▶ Орындау
+            </button>
+
+        </div>
+    `;
+
+    const startBtn = actionBox.querySelector("button");
+
+    startBtn.addEventListener("click", () => {
+        openStudentLevelTask(task);
+    });
+
+    card.appendChild(actionBox);
+}
             container.appendChild(card);
         });
 
@@ -570,7 +633,304 @@ async function loadStudentAssignments() {
     }
 }
 
+function openStudentLevelTask(task) {
 
+    const activity = task.activity_data;
+
+    if (!activity || !Array.isArray(activity.questions)) {
+        alert("Тапсырма мәліметтері табылмады.");
+        return;
+    }
+
+    // Бұрын ашылған терезе болса өшіреміз
+    const oldModal = document.getElementById("studentTaskModal");
+    if (oldModal) oldModal.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "studentTaskModal";
+
+    modal.style.cssText = `
+        position:fixed;
+        inset:0;
+        background:rgba(15,23,42,.72);
+        z-index:99999;
+        overflow-y:auto;
+        padding:25px;
+    `;
+
+    let questionsHTML = "";
+
+    ["A", "B", "C"].forEach(level => {
+
+        const levelQuestions =
+            activity.questions.filter(q => q.level === level);
+
+        if (!levelQuestions.length) return;
+
+        const levelName =
+            level === "A"
+                ? "A деңгейі — Базалық"
+                : level === "B"
+                    ? "B деңгейі — Орта"
+                    : "C деңгейі — Жоғары";
+
+        questionsHTML += `
+            <section style="
+                margin:25px 0;
+                padding:22px;
+                background:#f8fafc;
+                border-radius:18px;
+                border:1px solid #e2e8f0;
+            ">
+
+                <h2 style="margin-top:0;">
+                    ${levelName}
+                </h2>
+        `;
+
+        levelQuestions.forEach((q, index) => {
+
+            const globalIndex =
+                activity.questions.indexOf(q);
+
+            questionsHTML += `
+                <div style="
+                    background:white;
+                    border:1px solid #e2e8f0;
+                    border-radius:15px;
+                    padding:20px;
+                    margin:15px 0;
+                ">
+
+                    <div style="
+                        font-weight:700;
+                        font-size:16px;
+                        line-height:1.5;
+                        margin-bottom:15px;
+                    ">
+                        ${index + 1}. ${escapeAssignment(q.question)}
+                    </div>
+
+                    ${renderStudentAnswer(q, globalIndex)}
+
+                    <div style="
+                        margin-top:12px;
+                        color:#64748b;
+                        font-size:13px;
+                    ">
+                        ⭐ ${Number(q.points || 0)} ұпай
+                    </div>
+
+                </div>
+            `;
+        });
+
+        questionsHTML += `</section>`;
+    });
+
+    modal.innerHTML = `
+        <div style="
+            max-width:950px;
+            margin:20px auto;
+            background:white;
+            border-radius:24px;
+            padding:30px;
+            box-shadow:0 25px 80px rgba(0,0,0,.3);
+        ">
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:20px;
+            ">
+
+                <div>
+                    <div style="
+                        color:#0f766e;
+                        font-weight:700;
+                        margin-bottom:5px;
+                    ">
+                        🧠 AI-BILIM
+                    </div>
+
+                    <h1 style="margin:0 0 8px;">
+                        ${escapeAssignment(task.title)}
+                    </h1>
+
+                    <p style="
+                        margin:0;
+                        color:#64748b;
+                    ">
+                        ${escapeAssignment(
+                            activity.instruction ||
+                            "Барлық тапсырманы орындаңыз."
+                        )}
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    onclick="closeStudentLevelTask()"
+                    style="
+                        border:0;
+                        background:#f1f5f9;
+                        width:42px;
+                        height:42px;
+                        border-radius:50%;
+                        font-size:20px;
+                        cursor:pointer;
+                    "
+                >
+                    ✕
+                </button>
+
+            </div>
+
+            ${questionsHTML}
+
+            <div style="
+                margin-top:25px;
+                padding-top:20px;
+                border-top:1px solid #e2e8f0;
+                display:flex;
+                justify-content:flex-end;
+            ">
+
+                <button
+                    type="button"
+                    onclick="submitStudentLevelTask('${task.id}')"
+                    style="
+                        border:0;
+                        background:#0f766e;
+                        color:white;
+                        padding:14px 25px;
+                        border-radius:12px;
+                        font-size:16px;
+                        font-weight:700;
+                        cursor:pointer;
+                    "
+                >
+                    ✅ Жауаптарды жіберу
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    window.currentStudentTask = task;
+}
+
+
+function renderStudentAnswer(q, index) {
+
+    // Бір жауапты таңдау
+    if (q.type === "choice") {
+
+        return `
+            <div style="display:grid;gap:10px;">
+                ${(q.options || []).map(option => `
+                    <label style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                        padding:12px;
+                        border:1px solid #e2e8f0;
+                        border-radius:10px;
+                        cursor:pointer;
+                    ">
+
+                        <input
+                            type="radio"
+                            name="answer_${index}"
+                            value="${escapeAssignment(option)}"
+                        >
+
+                        <span>
+                            ${escapeAssignment(option)}
+                        </span>
+
+                    </label>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    // Дұрыс / Бұрыс
+    if (q.type === "true_false") {
+
+        return `
+            <div style="
+                display:flex;
+                gap:12px;
+                flex-wrap:wrap;
+            ">
+
+                <label style="
+                    padding:12px 18px;
+                    border:1px solid #e2e8f0;
+                    border-radius:10px;
+                    cursor:pointer;
+                ">
+                    <input
+                        type="radio"
+                        name="answer_${index}"
+                        value="Дұрыс"
+                    >
+                    Дұрыс
+                </label>
+
+                <label style="
+                    padding:12px 18px;
+                    border:1px solid #e2e8f0;
+                    border-radius:10px;
+                    cursor:pointer;
+                ">
+                    <input
+                        type="radio"
+                        name="answer_${index}"
+                        value="Бұрыс"
+                    >
+                    Бұрыс
+                </label>
+
+            </div>
+        `;
+    }
+
+    // Жазбаша жауап
+    return `
+        <textarea
+            id="answer_${index}"
+            rows="4"
+            placeholder="Жауабыңызды жазыңыз..."
+            style="
+                width:100%;
+                box-sizing:border-box;
+                padding:13px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+                resize:vertical;
+                font-family:inherit;
+                font-size:15px;
+            "
+        ></textarea>
+    `;
+}
+
+
+function closeStudentLevelTask() {
+
+    const modal =
+        document.getElementById("studentTaskModal");
+
+    if (modal) {
+        modal.remove();
+    }
+}
 function escapeAssignment(value) {
 
     return String(value ?? "")
