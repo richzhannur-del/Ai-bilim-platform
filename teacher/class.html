@@ -558,17 +558,21 @@
 
     <!-- НӘТИЖЕЛЕР -->
 
-    <section class="panel" id="results">
+   <section class="panel" id="results">
 
-      <h2>📊 Оқу нәтижелері</h2>
+    <h2>📊 Оқу нәтижелері</h2>
 
-      <div class="empty">
-        Оқушылар тапсырмаларды орындағаннан кейін
-        нәтижелер осы жерде көрсетіледі.
-      </div>
+    <p style="color:#64748b;margin-bottom:20px;">
+        Осы сынып оқушыларының тапсырма нәтижелері
+    </p>
 
-    </section>
+    <div id="classResultsList">
+        <div class="empty">
+            Нәтижелер жүктелуде...
+        </div>
+    </div>
 
+</section>
 
     <!-- ИНКЛЮЗИВТІ ҚОЛДАУ -->
 
@@ -1260,7 +1264,276 @@ async function loadAssignments() {
 }
 initClassPage();
   loadAssignments();
+async function loadClassResults() {
 
+    const container = document.getElementById("classResultsList");
+    if (!container) return;
+
+    container.innerHTML =
+        `<div class="empty">Нәтижелер жүктелуде...</div>`;
+
+    try {
+
+        // URL-ден сынып ID алу
+        const params = new URLSearchParams(window.location.search);
+        const classId = params.get("id");
+
+        if (!classId) {
+            container.innerHTML =
+                `<div class="empty">Сынып анықталмады.</div>`;
+            return;
+        }
+
+        // Осы сыныптың тапсырмаларын алу
+        const {
+            data: assignments,
+            error: assignmentsError
+        } = await sb
+            .from("assignments")
+            .select("id, title, max_score")
+            .eq("class_id", classId);
+
+        if (assignmentsError) throw assignmentsError;
+
+        if (!assignments || assignments.length === 0) {
+            container.innerHTML =
+                `<div class="empty">Бұл сыныпта тапсырма жоқ.</div>`;
+            return;
+        }
+
+        const assignmentIds =
+            assignments.map(item => item.id);
+
+        // Оқушылардың жауаптарын алу
+        const {
+            data: submissions,
+            error: submissionsError
+        } = await sb
+            .from("assignment_submissions")
+            .select(`
+                id,
+                assignment_id,
+                student_id,
+                answers,
+                score,
+                max_score,
+                ai_feedback,
+                status,
+                submitted_at
+            `)
+            .in("assignment_id", assignmentIds)
+            .order("submitted_at", { ascending: false });
+
+        if (submissionsError) throw submissionsError;
+
+        if (!submissions || submissions.length === 0) {
+            container.innerHTML =
+                `<div class="empty">
+                    📭 Оқушылар әзірге тапсырма жібермеген.
+                </div>`;
+            return;
+        }
+
+        // Оқушылардың аттарын алу
+        const studentIds = [
+            ...new Set(submissions.map(item => item.student_id))
+        ];
+
+        const {
+            data: profiles,
+            error: profilesError
+        } = await sb
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", studentIds);
+
+        if (profilesError) {
+            console.warn("Profiles error:", profilesError);
+        }
+
+        const profileMap = {};
+
+        (profiles || []).forEach(profile => {
+            profileMap[profile.id] =
+                profile.full_name || "Оқушы";
+        });
+
+        const assignmentMap = {};
+
+        assignments.forEach(item => {
+            assignmentMap[item.id] = item;
+        });
+
+        // Карточкаларды шығару
+        container.innerHTML = submissions.map(submission => {
+
+            const assignment =
+                assignmentMap[submission.assignment_id] || {};
+
+            const studentName =
+                profileMap[submission.student_id] || "Оқушы";
+
+            const score =
+                Number(submission.score || 0);
+
+            const maxScore =
+                Number(
+                    submission.max_score ||
+                    assignment.max_score ||
+                    0
+                );
+
+            const percent =
+                maxScore > 0
+                    ? Math.round((score / maxScore) * 100)
+                    : 0;
+
+            const date =
+                submission.submitted_at
+                    ? new Date(
+                        submission.submitted_at
+                      ).toLocaleString("kk-KZ")
+                    : "—";
+
+            let answersHTML = "—";
+
+            if (
+                submission.answers &&
+                typeof submission.answers === "object"
+            ) {
+                answersHTML = Object.entries(submission.answers)
+                    .map(([key, value], index) => `
+                        <div style="
+                            padding:8px 0;
+                            border-bottom:1px solid #f1f5f9;
+                        ">
+                            <strong>${index + 1}.</strong>
+                            ${escapeResultHTML(value)}
+                        </div>
+                    `)
+                    .join("");
+            }
+
+            return `
+                <div style="
+                    background:white;
+                    border:1px solid #e2e8f0;
+                    border-radius:16px;
+                    padding:20px;
+                    margin-bottom:15px;
+                    box-shadow:0 4px 15px rgba(15,23,42,.05);
+                ">
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        gap:15px;
+                        flex-wrap:wrap;
+                        margin-bottom:15px;
+                    ">
+
+                        <div>
+                            <div style="
+                                font-size:18px;
+                                font-weight:800;
+                                color:#0f172a;
+                            ">
+                                👤 ${escapeResultHTML(studentName)}
+                            </div>
+
+                            <div style="
+                                color:#64748b;
+                                margin-top:5px;
+                            ">
+                                📝 ${escapeResultHTML(
+                                    assignment.title || "Тапсырма"
+                                )}
+                            </div>
+                        </div>
+
+                        <div style="
+                            background:#ecfdf5;
+                            color:#047857;
+                            padding:10px 16px;
+                            border-radius:12px;
+                            font-weight:800;
+                        ">
+                            ${score} / ${maxScore}
+                            &nbsp; • &nbsp;
+                            ${percent}%
+                        </div>
+
+                    </div>
+
+                    <div style="
+                        background:#f8fafc;
+                        border-radius:12px;
+                        padding:15px;
+                        margin-bottom:12px;
+                    ">
+
+                        <strong>Оқушы жауаптары:</strong>
+
+                        <div style="margin-top:8px;">
+                            ${answersHTML}
+                        </div>
+
+                    </div>
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        gap:10px;
+                        flex-wrap:wrap;
+                        font-size:13px;
+                        color:#64748b;
+                    ">
+
+                        <span>
+                            ✅ ${escapeResultHTML(
+                                submission.status || "submitted"
+                            )}
+                        </span>
+
+                        <span>
+                            🕐 ${escapeResultHTML(date)}
+                        </span>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+
+    } catch (error) {
+
+        console.error("Class results error:", error);
+
+        container.innerHTML = `
+            <div style="
+                background:#fee2e2;
+                color:#991b1b;
+                padding:15px;
+                border-radius:12px;
+            ">
+                Нәтижелерді жүктеу қатесі:
+                ${escapeResultHTML(error.message)}
+            </div>
+        `;
+    }
+}
+
+
+function escapeResultHTML(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+  loadClassResults();
 </script>
 
 </body>
