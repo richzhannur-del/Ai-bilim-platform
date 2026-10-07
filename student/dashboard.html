@@ -1305,11 +1305,11 @@ async function joinClass() {
         student_id: currentUser.id
       });
 
+if (insertError) {
+    throw insertError;
+}
 
-    if (insertError) {
-      throw insertError;
-    }
-
+await loadStudentAssignments();
 
     showMessage(
       `Сәтті! Сіз «${classItem.name}» сыныбына қосылдыңыз.`,
