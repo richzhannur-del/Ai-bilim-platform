@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нәтижелер | AI-BILIM</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: #fffdf9;
+            border-right: 1px solid #e5e7eb;
+            padding: 25px 18px;
+        }
+
+        .logo {
+            font-family: Georgia, serif;
+            font-size: 27px;
+            font-weight: 800;
+            color: #10213f;
+        }
+
+        .subtitle {
+            color: #94745d;
+            font-size: 13px;
+            margin-top: 5px;
+            margin-bottom: 35px;
+        }
+
+        .menu a {
+            display: block;
+            padding: 13px 14px;
+            margin-bottom: 6px;
+            text-decoration: none;
+            color: #334155;
+            border-radius: 10px;
+        }
+
+        .menu a:hover {
+            background: #f1f5f9;
+        }
+
+        .menu .active {
+            background: #b7791f;
+            color: white;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-x: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            margin: 0;
+            font-family: Georgia, serif;
+            font-size: 30px;
+        }
+
+        .teacher {
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .refresh-btn {
+            border: none;
+            background: #0f766e;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .stat {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 22px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 14px;
+            font-size: 13px;
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: top;
+        }
+
+        .score {
+            font-weight: 800;
+            color: #0f766e;
+            white-space: nowrap;
+        }
+
+        .status {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .answer-btn {
+            border: none;
+            background: #eef2ff;
+            color: #3730a3;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: #64748b;
+        }
+
+        .error {
+            padding: 18px;
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 12px;
+        }
+
+        @media (max-width: 850px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                padding: 18px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <div class="logo">AI-BILIM</div>
+        <div class="subtitle">Мұғалім кабинеті</div>
+
+        <div class="menu">
+            <a href="dashboard.html">⌂ &nbsp; Басты бет</a>
+            <a href="classes.html">◉ &nbsp; Менің сыныптарым</a>
+            <a href="dashboard.html#workshop">✦ &nbsp; ЖИ-Шеберхана</a>
+            <a href="dashboard.html">▣ &nbsp; Тапсырмалар</a>
+            <a href="dashboard.html">□ &nbsp; Ресурстар</a>
+            <a href="results.html" class="active">📊 &nbsp; Нәтижелер</a>
+        </div>
+
+    </aside>
+
+    <main class="main">
+
+        <div class="header">
+            <div>
+                <h1>📊 Оқушылар нәтижелері</h1>
+                <div class="teacher">
+                    Оқушылар тапсырған жұмыстар
+                </div>
+            </div>
+
+            <button class="refresh-btn" onclick="loadResults()">
+                ↻ Жаңарту
+            </button>
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="stat-number" id="submissionCount">0</div>
+                <div class="stat-label">Тапсырылған жұмыс</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-number" id="studentCount">0</div>
+                <div class="stat-label">Оқушы</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-number" id="averageScore">—</div>
+                <div class="stat-label">Орташа нәтиже</div>
+            </div>
+
+        </div>
+
+        <div class="panel">
+
+            <div id="resultsArea">
+                <div class="empty">
+                    Нәтижелер жүктелуде...
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="../js/config.js"></script>
+
+<script>
+
+function escapeHTML(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+function formatAnswers(answers) {
+
+    if (!answers) return "—";
+
+    if (typeof answers === "string") {
+        return escapeHTML(answers);
+    }
+
+    const entries = Object.entries(answers);
+
+    if (!entries.length) return "—";
+
+    return entries.map(([question, answer], index) => {
+
+        return `
+            <div style="margin-bottom:8px;">
+                <strong>${index + 1}.</strong>
+                ${escapeHTML(answer)}
+            </div>
+        `;
+
+    }).join("");
+}
+
+
+async function loadResults() {
+
+    const area = document.getElementById("resultsArea");
+
+    area.innerHTML =
+        `<div class="empty">Нәтижелер жүктелуде...</div>`;
+
+    try {
+
+        const {
+            data: { user },
+            error: userError
+        } = await sb.auth.getUser();
+
+        if (userError || !user) {
+            window.location.href = "../login.html";
+            return;
+        }
+
+
+        // Мұғалімнің сыныптарын аламыз
+        const {
+            data: classes,
+            error: classesError
+        } = await sb
+            .from("classes")
+            .select("id, name, subject")
+            .eq("teacher_id", user.id);
+
+        if (classesError) throw classesError;
+
+
+        if (!classes || classes.length === 0) {
+
+            area.innerHTML =
+                `<div class="empty">
+                    Сізде әзірге сынып жоқ.
+                </div>`;
+
+            return;
+        }
+
+
+        const classIds = classes.map(item => item.id);
+
+
+        // Мұғалім берген тапсырмалар
+        const {
+            data: assignments,
+            error: assignmentsError
+        } = await sb
+            .from("assignments")
+            .select("id, class_id, title, max_score")
+            .in("class_id", classIds);
+
+        if (assignmentsError) throw assignmentsError;
+
+
+        if (!assignments || assignments.length === 0) {
+
+            area.innerHTML =
+                `<div class="empty">
+                    Әзірге тапсырма берілмеген.
+                </div>`;
+
+            return;
+        }
+
+
+        const assignmentIds =
+            assignments.map(item => item.id);
+
+
+        // Оқушылар жіберген жауаптар
+        const {
+            data: submissions,
+            error: submissionsError
+        } = await sb
+            .from("assignment_submissions")
+            .select(`
+                id,
+                assignment_id,
+                student_id,
+                answers,
+                score,
+                max_score,
+                ai_feedback,
+                status,
+                submitted_at
+            `)
+            .in("assignment_id", assignmentIds)
+            .order("submitted_at", {
+                ascending: false
+            });
+
+        if (submissionsError) throw submissionsError;
+
+
+        if (!submissions || submissions.length === 0) {
+
+            document.getElementById("submissionCount").textContent = "0";
+            document.getElementById("studentCount").textContent = "0";
+            document.getElementById("averageScore").textContent = "—";
+
+            area.innerHTML =
+                `<div class="empty">
+                    📭 Оқушылар әзірге тапсырма жібермеген.
+                </div>`;
+
+            return;
+        }
+
+
+        // Оқушы профильдерін аламыз
+        const studentIds = [
+            ...new Set(
+                submissions.map(item => item.student_id)
+            )
+        ];
+
+
+        const {
+            data: profiles,
+            error: profilesError
+        } = await sb
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", studentIds);
+
+        if (profilesError) {
+            console.warn("Profiles:", profilesError);
+        }
+
+
+        const profileMap = {};
+
+        (profiles || []).forEach(profile => {
+            profileMap[profile.id] =
+                profile.full_name || "Оқушы";
+        });
+
+
+        const assignmentMap = {};
+
+        assignments.forEach(item => {
+            assignmentMap[item.id] = item;
+        });
+
+
+        const classMap = {};
+
+        classes.forEach(item => {
+            classMap[item.id] = item;
+        });
+
+
+        // Статистика
+        document.getElementById("submissionCount").textContent =
+            submissions.length;
+
+        document.getElementById("studentCount").textContent =
+            studentIds.length;
+
+
+        const percentages = submissions
+            .filter(item =>
+                Number(item.max_score) > 0
+            )
+            .map(item =>
+                (Number(item.score || 0) /
+                 Number(item.max_score)) * 100
+            );
+
+
+        const average = percentages.length
+            ? Math.round(
+                percentages.reduce((a, b) => a + b, 0) /
+                percentages.length
+              )
+            : 0;
+
+
+        document.getElementById("averageScore").textContent =
+            percentages.length
+                ? `${average}%`
+                : "—";
+
+
+        let rows = "";
+
+
+        submissions.forEach(submission => {
+
+            const assignment =
+                assignmentMap[submission.assignment_id] || {};
+
+            const classInfo =
+                classMap[assignment.class_id] || {};
+
+            const studentName =
+                profileMap[submission.student_id] ||
+                "Оқушы";
+
+            const date = submission.submitted_at
+                ? new Date(
+                    submission.submitted_at
+                  ).toLocaleString("kk-KZ")
+                : "—";
+
+
+            rows += `
+                <tr>
+
+                    <td>
+                        <strong>
+                            ${escapeHTML(studentName)}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${escapeHTML(classInfo.name || "—")}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(classInfo.subject || "—")}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(assignment.title || "—")}
+                    </td>
+
+                    <td style="min-width:220px;">
+                        ${formatAnswers(submission.answers)}
+                    </td>
+
+                    <td class="score">
+                        ${submission.score ?? 0}
+                        /
+                        ${submission.max_score ??
+                          assignment.max_score ??
+                          0}
+                    </td>
+
+                    <td>
+                        <span class="status">
+                            ${escapeHTML(
+                                submission.status ||
+                                "submitted"
+                            )}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${escapeHTML(date)}
+                    </td>
+
+                </tr>
+            `;
+        });
+
+
+        area.innerHTML = `
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Оқушы</th>
+                            <th>Сынып</th>
+                            <th>Пән</th>
+                            <th>Тапсырма</th>
+                            <th>Жауаптары</th>
+                            <th>Ұпай</th>
+                            <th>Статус</th>
+                            <th>Тапсырған уақыты</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        ${rows}
+                    </tbody>
+
+                </table>
+
+            </div>
+        `;
+
+
+    } catch (error) {
+
+        console.error("Results error:", error);
+
+        area.innerHTML = `
+            <div class="error">
+                Нәтижелерді жүктеу кезінде қате пайда болды:
+                <br><br>
+                ${escapeHTML(error.message)}
+            </div>
+        `;
+    }
+}
+
+
+loadResults();
+
+</script>
+
+</body>
+</html>
