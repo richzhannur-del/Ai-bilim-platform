@@ -760,15 +760,32 @@ document.getElementById("createBtn")
         return;
     }
 
-   // ҚМЖ және Презентация ЖИ арқылы жасалады
-if (type !== "ҚМЖ" && type !== "Презентация") {
-    alert("Қазір ҚМЖ және Презентация генераторлары қолжетімді.");
+ // ҚМЖ, Презентация және Деңгейлік тапсырма
+if (
+    type !== "ҚМЖ" &&
+    type !== "Презентация" &&
+    type !== "Деңгейлік тапсырма"
+) {
+    alert(
+        "Қазір ҚМЖ, Презентация және Деңгейлік тапсырма қолжетімді."
+    );
     return;
 }
 
-// Презентация таңдалса
+// Презентация
 if (type === "Презентация") {
     await createAIPresentation(
+        subject,
+        grade,
+        topic,
+        learningObjective
+    );
+    return;
+}
+
+// Деңгейлік тапсырма
+if (type === "Деңгейлік тапсырма") {
+    await createAILevelTask(
         subject,
         grade,
         topic,
@@ -1677,6 +1694,332 @@ function showPresentationPreview(
             error.message
         );
     }
+}
+async function createAILevelTask(
+    subject,
+    grade,
+    topic,
+    learningObjective
+) {
+    const btn = document.getElementById("createBtn");
+    const result = document.getElementById("qmjResult");
+
+    btn.disabled = true;
+    btn.innerHTML = "⏳ Тапсырмалар жасалуда...";
+
+    result.style.display = "block";
+    result.innerHTML = `
+        <div style="text-align:center;padding:40px;">
+            <h2>🧠 AI-BILIM</h2>
+            <h3>Деңгейлік тапсырмалар жасалуда...</h3>
+            <p style="color:#64748b;">
+                A, B, C деңгейлеріне арналған 9 тапсырма дайындалып жатыр
+            </p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch("/api/generate-level-task", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                subject,
+                grade,
+                topic,
+                learningObjective
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || "Тапсырма жасау кезінде қате пайда болды."
+            );
+        }
+
+        const activity = data.activity;
+
+        if (
+            !activity ||
+            !Array.isArray(activity.questions) ||
+            activity.questions.length !== 9
+        ) {
+            throw new Error("9 тапсырма толық алынбады.");
+        }
+
+        window.currentLevelTask = {
+            subject,
+            grade,
+            topic,
+            learningObjective,
+            activity
+        };
+
+        showLevelTaskPreview(activity);
+
+    } catch (error) {
+        console.error("Level task error:", error);
+
+        result.innerHTML = `
+            <div style="
+                padding:25px;
+                background:#fff1f2;
+                border:1px solid #fecdd3;
+                border-radius:16px;
+                color:#991b1b;
+            ">
+                <h3>⚠️ Тапсырмалар жасалмады</h3>
+                <p>${escapeQMJ(error.message)}</p>
+            </div>
+        `;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "✨ Жасау →";
+    }
+}
+
+
+function showLevelTaskPreview(activity) {
+    const result = document.getElementById("qmjResult");
+
+    const questions = activity.questions || [];
+
+    const levelInfo = {
+        A: {
+            title: "A деңгейі",
+            text: "Базалық деңгей",
+            color: "#15803d",
+            bg: "#f0fdf4",
+            border: "#bbf7d0"
+        },
+        B: {
+            title: "B деңгейі",
+            text: "Орта деңгей",
+            color: "#b45309",
+            bg: "#fffbeb",
+            border: "#fde68a"
+        },
+        C: {
+            title: "C деңгейі",
+            text: "Жоғары деңгей",
+            color: "#b91c1c",
+            bg: "#fff1f2",
+            border: "#fecdd3"
+        }
+    };
+
+    let html = `
+        <div style="margin-bottom:25px;">
+            <h2 style="margin-bottom:5px;">
+                🧠 ${escapeQMJ(activity.title || "Деңгейлік тапсырма")}
+            </h2>
+
+            <p style="color:#64748b;margin-top:0;">
+                ${escapeQMJ(activity.instruction || "")}
+            </p>
+        </div>
+    `;
+
+    ["A", "B", "C"].forEach(level => {
+        const info = levelInfo[level];
+
+        const levelQuestions =
+            questions.filter(q => q.level === level);
+
+        html += `
+            <div style="
+                margin-bottom:28px;
+                padding:22px;
+                border:1px solid ${info.border};
+                background:${info.bg};
+                border-radius:20px;
+            ">
+
+                <div style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    margin-bottom:18px;
+                ">
+                    <div>
+                        <h2 style="
+                            margin:0;
+                            color:${info.color};
+                        ">
+                            ${info.title}
+                        </h2>
+
+                        <div style="
+                            margin-top:4px;
+                            color:#64748b;
+                        ">
+                            ${info.text}
+                        </div>
+                    </div>
+
+                    <div style="
+                        padding:8px 14px;
+                        border-radius:30px;
+                        background:white;
+                        font-weight:700;
+                        color:${info.color};
+                    ">
+                        ${levelQuestions.reduce(
+                            (sum, q) => sum + Number(q.points || 0),
+                            0
+                        )} ұпай
+                    </div>
+                </div>
+        `;
+
+        levelQuestions.forEach((q, index) => {
+            html += `
+                <div style="
+                    background:white;
+                    border-radius:15px;
+                    padding:20px;
+                    margin-bottom:14px;
+                    border:1px solid ${info.border};
+                ">
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        gap:15px;
+                        margin-bottom:12px;
+                    ">
+                        <strong>
+                            ${index + 1}. ${escapeQMJ(q.question)}
+                        </strong>
+
+                        <span style="
+                            white-space:nowrap;
+                            color:${info.color};
+                            font-weight:700;
+                        ">
+                            ${q.points} ұпай
+                        </span>
+                    </div>
+
+                    ${renderTeacherQuestionPreview(q)}
+
+                    <div style="
+                        margin-top:15px;
+                        padding-top:12px;
+                        border-top:1px dashed #cbd5e1;
+                        font-size:13px;
+                        color:#475569;
+                    ">
+                        <b>Дескриптор:</b>
+                        ${escapeQMJ(q.descriptor || "")}
+                    </div>
+
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+    });
+
+    html += `
+        <div style="
+            display:flex;
+            justify-content:flex-end;
+            margin-top:25px;
+        ">
+            <button
+                type="button"
+                onclick="openPublishLevelTask()"
+                style="
+                    border:none;
+                    border-radius:12px;
+                    padding:14px 24px;
+                    background:#0f766e;
+                    color:white;
+                    font-weight:700;
+                    font-size:15px;
+                    cursor:pointer;
+                "
+            >
+                📤 Сыныпқа беру
+            </button>
+        </div>
+    `;
+
+    result.innerHTML = html;
+    result.style.display = "block";
+
+    result.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+
+function renderTeacherQuestionPreview(q) {
+
+    if (q.type === "choice") {
+        return `
+            <div style="
+                display:grid;
+                gap:8px;
+            ">
+                ${(q.options || []).map(option => `
+                    <div style="
+                        padding:10px 12px;
+                        border:1px solid #e2e8f0;
+                        border-radius:10px;
+                    ">
+                        ○ ${escapeQMJ(option)}
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    if (q.type === "true_false") {
+        return `
+            <div style="display:flex;gap:10px;">
+                <span style="
+                    padding:9px 15px;
+                    background:#f8fafc;
+                    border-radius:9px;
+                ">
+                    ○ Дұрыс
+                </span>
+
+                <span style="
+                    padding:9px 15px;
+                    background:#f8fafc;
+                    border-radius:9px;
+                ">
+                    ○ Бұрыс
+                </span>
+            </div>
+        `;
+    }
+
+    return `
+        <div style="
+            border:1px dashed #94a3b8;
+            padding:12px;
+            border-radius:10px;
+            color:#94a3b8;
+        ">
+            Оқушы жауабын осы жерге жазады...
+        </div>
+    `;
+}
+
+
+// Келесі қадамда Supabase-пен байланыстырамыз
+function openPublishLevelTask() {
+    alert(
+        "Тапсырмалар дайын. Келесі қадамда сыныпты таңдап, оқушыларға жіберуді қосамыз."
+    );
 }
   function escapeQMJ(value) {
     return String(value ?? "")
