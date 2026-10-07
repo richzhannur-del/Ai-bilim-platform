@@ -931,7 +931,126 @@ function closeStudentLevelTask() {
         modal.remove();
     }
 }
-function escapeAssignment(value) {
+
+  async function submitStudentLevelTask(assignmentId) {
+    try {
+        // Қазіргі оқушыны анықтау
+        const {
+            data: { user },
+            error: userError
+        } = await sb.auth.getUser();
+
+        if (userError || !user) {
+            alert("Оқушы аккаунты анықталмады.");
+            return;
+        }
+
+        const modal = document.getElementById("studentTaskModal");
+
+        if (!modal) {
+            alert("Тапсырма терезесі табылмады.");
+            return;
+        }
+
+        // Оқушы жауаптарын жинау
+        const answerElements = modal.querySelectorAll(
+            'input[type="radio"]:checked, textarea'
+        );
+
+        const answers = {};
+
+        answerElements.forEach(element => {
+            if (!element.name) return;
+
+            answers[element.name] = element.value.trim();
+        });
+
+        if (Object.keys(answers).length === 0) {
+            alert("Кемінде бір тапсырмаға жауап беріңіз.");
+            return;
+        }
+
+        // Тапсырманың максималды ұпайын алу
+        const {
+            data: assignment,
+            error: assignmentError
+        } = await sb
+            .from("assignments")
+            .select("max_score")
+            .eq("id", assignmentId)
+            .single();
+
+        if (assignmentError) throw assignmentError;
+
+        const maxScore = assignment?.max_score || 10;
+
+        // Әзірге жауап саны бойынша бастапқы ұпай
+        // Кейін мұны нақты дұрыс жауаппен автоматты тексеруге ауыстырамыз
+        const answeredCount = Object.keys(answers).length;
+
+        const score = Math.min(
+            answeredCount,
+            maxScore
+        );
+
+        // Бұрын тапсырған-тapсырмағанын тексеру
+        const {
+            data: existing
+        } = await sb
+            .from("assignment_submissions")
+            .select("id")
+            .eq("assignment_id", assignmentId)
+            .eq("student_id", user.id)
+            .maybeSingle();
+
+        const submissionData = {
+            assignment_id: assignmentId,
+            student_id: user.id,
+            answers: answers,
+            score: score,
+            max_score: maxScore,
+            ai_feedback: "Жауап мұғалімге жіберілді.",
+            status: "submitted",
+            submitted_at: new Date().toISOString()
+        };
+
+        let saveError;
+
+        if (existing) {
+            const { error } = await sb
+                .from("assignment_submissions")
+                .update(submissionData)
+                .eq("id", existing.id);
+
+            saveError = error;
+        } else {
+            const { error } = await sb
+                .from("assignment_submissions")
+                .insert(submissionData);
+
+            saveError = error;
+        }
+
+        if (saveError) throw saveError;
+
+        alert(
+            "✅ Жауабыңыз мұғалімге сәтті жіберілді!"
+        );
+
+        closeStudentLevelTask();
+
+        await loadStudentAssignments();
+
+    } catch (error) {
+        console.error("Submission error:", error);
+
+        alert(
+            "Жауапты жіберу кезінде қате пайда болды:\n" +
+            error.message
+        );
+    }
+}
+  function escapeAssignment(value) {
 
     return String(value ?? "")
         .replaceAll("&", "&amp;")
