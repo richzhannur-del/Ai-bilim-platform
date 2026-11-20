@@ -138,6 +138,74 @@ export default async function handler(req, res) {
       );
     }
 
+    
+    // Комикстің 6 кадрына сурет генерациялау
+    const characterDescriptions = (comic.characters || [])
+      .map(c => `${c.name}: ${c.description}`)
+      .join("; ");
+
+    for (let i = 0; i < comic.frames.length; i++) {
+      const frame = comic.frames[i];
+
+      const imagePrompt = `
+Educational comic illustration, panel ${i + 1} of 6.
+Topic: ${topic}.
+Characters: ${characterDescriptions}.
+Scene: ${frame.imagePrompt || frame.scene}.
+
+Keep character appearances consistent across panels.
+Colorful, polished 2D comic book style.
+Clear composition, expressive characters.
+No text, no letters, no speech bubbles.
+Suitable for grade ${grade} students.
+`;
+
+      try {
+        const imageResponse = await fetch(
+          "https://api.openai.com/v1/images/generations",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-image-1",
+              prompt: imagePrompt,
+              size: "1024x1024",
+              n: 1
+            })
+          }
+        );
+
+        const imageData = await imageResponse.json();
+
+        if (!imageResponse.ok) {
+          throw new Error(
+            imageData.error?.message ||
+            "Сурет генерациясы орындалмады."
+          );
+        }
+
+        const base64 = imageData.data?.[0]?.b64_json;
+
+        if (!base64) {
+          throw new Error("Сурет деректері алынбады.");
+        }
+
+        frame.image =
+          `data:image/png;base64,${base64}`;
+
+      } catch (imageError) {
+        console.error(
+          `${i + 1}-кадр суретінің қатесі:`,
+          imageError
+        );
+
+        frame.image = null;
+      }
+    }
+
     return res.status(200).json({
       success: true,
       comic
