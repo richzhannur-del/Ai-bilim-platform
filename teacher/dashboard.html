@@ -3281,7 +3281,7 @@ function escapeSOS(value) {
 
   
 // ЖАСАЛҒАН РЕСУРСТАРДЫ САҚТАУ
-function saveRecentResource(type, subject, grade, topic) {
+function saveRecentResource(type, subject, grade, topic, content = null) {
     const resources = JSON.parse(
         localStorage.getItem("aiBilimRecentResources") || "[]"
     );
@@ -3291,6 +3291,7 @@ function saveRecentResource(type, subject, grade, topic) {
         subject,
         grade,
         topic,
+        content,
         createdAt: new Date().toISOString()
     });
 
