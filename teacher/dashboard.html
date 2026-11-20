@@ -3592,6 +3592,28 @@ async function createAIComic(subject, grade, topic, learningObjective) {
 
             card.append(title, scene);
 
+          
+if (frame.image) {
+    const img = document.createElement("img");
+
+    img.src = frame.image;
+    img.alt = `${index + 1}-кадр: ${frame.scene || ""}`;
+
+    img.style.cssText = `
+        width:100%;
+        height:auto;
+        aspect-ratio:1/1;
+        object-fit:cover;
+        border-radius:12px;
+        margin-top:12px;
+        margin-bottom:12px;
+        display:block;
+    `;
+
+    card.appendChild(img);
+}
+
+
             (frame.dialogue || []).forEach(line => {
                 const bubble = document.createElement("div");
                 bubble.style.cssText =
