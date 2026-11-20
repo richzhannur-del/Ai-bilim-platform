@@ -3446,6 +3446,50 @@ async function loadRecentResources() {
         details.style.marginTop = "5px";
 
         card.append(title, details);
+      if (resource.type === "Комикс" && resource.content?.comic) {
+    const openComicBtn = document.createElement("button");
+
+    openComicBtn.type = "button";
+    openComicBtn.textContent = "📂 Комиксті қайта ашу";
+
+    openComicBtn.style.cssText = `
+        display:block;
+        margin-top:12px;
+        padding:10px 12px;
+        background:#7c3aed;
+        color:white;
+        border:none;
+        border-radius:8px;
+        cursor:pointer;
+        width:100%;
+    `;
+
+    openComicBtn.addEventListener("click", async () => {
+        const saved = resource.content;
+        const comic = structuredClone(saved.comic);
+
+        for (const frame of comic.frames || []) {
+            if (!frame.storagePath) continue;
+
+            const { data, error } = await sb.storage
+                .from("comics")
+                .createSignedUrl(frame.storagePath, 3600);
+
+            if (error) {
+                console.error("Суретті ашу қатесі:", error);
+                continue;
+            }
+
+            frame.image = data.signedUrl;
+        }
+
+        window.currentComic = comic;
+
+        await createAIComicFromSaved(comic, saved.topic);
+    });
+
+    card.appendChild(openComicBtn);
+}
       if (resource.type === "ҚМЖ" && resource.content) {
     const openBtn = document.createElement("button");
 
@@ -3710,6 +3754,74 @@ if (frame.image) {
 window.addEventListener("pageshow", () => {
     loadRecentResources();
 });
+  async function createAIComicFromSaved(comic, topic) {
+    const result = document.getElementById("qmjResult");
+
+    if (!result) {
+        alert("Комиксті көрсететін бөлім табылмады.");
+        return;
+    }
+
+    result.style.display = "block";
+    result.innerHTML = "";
+
+    const heading = document.createElement("h2");
+    heading.textContent = comic.title || topic || "Комикс";
+    result.appendChild(heading);
+
+    const grid = document.createElement("div");
+    grid.style.cssText =
+        "display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:20px;";
+
+    (comic.frames || []).forEach((frame, index) => {
+        const card = document.createElement("div");
+        card.style.cssText =
+            "padding:18px;border:2px solid #e2e8f0;border-radius:14px;background:#fff;";
+
+        const title = document.createElement("h3");
+        title.textContent = `${index + 1}-кадр`;
+
+        const scene = document.createElement("p");
+        scene.textContent = frame.scene || "";
+
+        card.append(title, scene);
+
+        if (frame.image) {
+            const img = document.createElement("img");
+            img.src = frame.image;
+            img.alt = `${index + 1}-кадр`;
+            img.style.cssText =
+                "width:100%;height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin:12px 0;display:block;";
+            card.appendChild(img);
+        }
+
+        (frame.dialogue || []).forEach(line => {
+            const bubble = document.createElement("div");
+            bubble.style.cssText =
+                "background:#e0f2fe;padding:12px;border-radius:14px;margin-top:10px;";
+
+            bubble.textContent =
+                `${line.speaker || "Кейіпкер"}: ${line.text || ""}`;
+
+            card.appendChild(bubble);
+        });
+
+        grid.appendChild(card);
+    });
+
+    result.appendChild(grid);
+
+    const conclusion = document.createElement("p");
+    conclusion.style.cssText =
+        "margin-top:20px;padding:15px;background:#dcfce7;border-radius:10px;";
+    conclusion.textContent = "Қорытынды: " + (comic.conclusion || "");
+    result.appendChild(conclusion);
+
+    result.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
 </script>
 </body>
 </html>
