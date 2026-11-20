@@ -3458,7 +3458,48 @@ async function loadRecentResources() {
 
     card.appendChild(openBtn);
 }
-        container.appendChild(card);
+
+if (resource.type === "Презентация" && resource.content) {
+    const openPptBtn = document.createElement("button");
+
+    openPptBtn.type = "button";
+    openPptBtn.textContent = "📂 Презентацияны қайта ашу";
+
+    openPptBtn.style.cssText = `
+        display:block;
+        margin-top:12px;
+        padding:9px 12px;
+        background:#2563eb;
+        color:white;
+        border:none;
+        border-radius:8px;
+        cursor:pointer;
+        width:100%;
+    `;
+
+    openPptBtn.addEventListener("click", () => {
+        const saved = resource.content;
+
+        if (!saved.presentation) {
+            alert("Презентацияның толық мазмұны сақталмаған.");
+            return;
+        }
+
+        window.currentPresentation = saved;
+
+        showPresentationPreview(
+            saved.subject || resource.subject,
+            saved.grade || resource.grade,
+            saved.topic || resource.topic,
+            saved.presentation
+        );
+    });
+
+    card.appendChild(openPptBtn);
+}
+
+      
+      container.appendChild(card);
     });
 }
 
