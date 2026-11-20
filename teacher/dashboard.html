@@ -680,6 +680,28 @@ async function loadClasses(){
   document.getElementById("classCount").textContent=
     data?.length || 0;
 
+  // Мұғалімнің барлық сыныптарындағы оқушылар санын есептеу
+const classIds = (data || []).map(item => item.id);
+
+let totalStudents = 0;
+
+if (classIds.length > 0) {
+    const { data: members, error: membersError } = await sb
+        .from("class_members")
+        .select("student_id")
+        .in("class_id", classIds);
+
+    if (membersError) {
+        console.error("Оқушылар санын жүктеу қатесі:", membersError);
+    } else {
+        totalStudents = new Set(
+            (members || []).map(item => item.student_id)
+        ).size;
+    }
+}
+
+document.getElementById("studentCount").textContent = totalStudents;
+
   const box=document.getElementById("classList");
 
   if(!data || data.length===0){
