@@ -198,21 +198,12 @@ Suitable for grade ${grade} students.
 
      } catch (imageError) {
     console.error(
-        `Комикстің ${i + 1}-кадрындағы сурет қатесі:`,
+        `${i + 1}-кадр суретінің қатесі:`,
         imageError
     );
 
-    return res.status(500).json({
-        error: `${i + 1}-кадрдың суреті жасалмады: ${imageError.message}`
-    });
+    frame.image = null;
 }
-        console.error(
-          `${i + 1}-кадр суретінің қатесі:`,
-          imageError
-        );
-
-        frame.image = null;
-      }
     }
 
     return res.status(200).json({
