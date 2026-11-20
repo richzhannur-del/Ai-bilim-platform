@@ -3568,15 +3568,57 @@ async function createAIComic(subject, grade, topic, learningObjective) {
 
         const comic = data.comic;
         window.currentComic = comic;
+// Комикс суреттерін Supabase Storage-ке сақтау
+const userId = currentUser?.id;
 
+if (userId && Array.isArray(comic.frames)) {
+    for (let i = 0; i < comic.frames.length; i++) {
+        const frame = comic.frames[i];
+
+        if (!frame.image?.startsWith("data:image/")) continue;
+
+        try {
+            const response = await fetch(frame.image);
+            const blob = await response.blob();
+
+            const path = `${userId}/${crypto.randomUUID()}-${i + 1}.png`;
+
+            const { error } = await sb.storage
+                .from("comics")
+                .upload(path, blob, {
+                    contentType: "image/png",
+                    upsert: false
+                });
+
+            if (error) throw error;
+
+            // Суреттің сақтау жолын комикске байланыстыру
+            frame.storagePath = path;
+
+        } catch (error) {
+            console.error(`${i + 1}-кадрды сақтау қатесі:`, error);
+        }
+    }
+}
       try {
-   saveRecentResource(
+  saveRecentResource(
     "Комикс",
     subject,
     grade,
-    topic
+    topic,
+    {
+        subject,
+        grade,
+        topic,
+        comic: {
+            ...comic,
+            frames: comic.frames.map(frame => ({
+                ...frame,
+                image: null
+            }))
+        }
+    }
 );
-
     console.log("Комикс соңғы ресурстарға сақталды");
 } catch (saveError) {
     console.error("Комиксті сақтау қатесі:", saveError);
