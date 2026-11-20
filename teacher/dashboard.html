@@ -788,14 +788,22 @@ document.getElementById("createBtn")
 if (
     type !== "ҚМЖ" &&
     type !== "Презентация" &&
-    type !== "Деңгейлік тапсырма"
+    type !== "Деңгейлік тапсырма" &&
+    type !== "Комикс"
 ) {
-    alert(
-        "Қазір ҚМЖ, Презентация және Деңгейлік тапсырма қолжетімді."
+    alert("Бұл ресурс түрі әзірге қолжетімді емес.");
+    return;
+}
+// КОМИКС ГЕНЕРАТОРЫ
+if (type === "Комикс") {
+    await createAIComic(
+        subject,
+        grade,
+        topic,
+        learningObjective
     );
     return;
 }
-
 // Презентация
 if (type === "Презентация") {
     await createAIPresentation(
@@ -3526,6 +3534,102 @@ if (resource.type === "Презентация" && resource.content) {
 }
 
 document.addEventListener("DOMContentLoaded", loadRecentResources);
+
+  
+async function createAIComic(subject, grade, topic, learningObjective) {
+    const btn = document.getElementById("createBtn");
+    const result = document.getElementById("qmjResult");
+
+    btn.disabled = true;
+    btn.textContent = "⏳ Комикс жасалуда...";
+
+    result.style.display = "block";
+    result.textContent = "ЖИ 6 кадрлық комикс дайындап жатыр...";
+
+    try {
+        const response = await fetch("/api/generate-comic", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                subject,
+                grade,
+                topic,
+                learningObjective
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "Комикс жасалмады.");
+        }
+
+        const comic = data.comic;
+        window.currentComic = comic;
+
+        result.innerHTML = "";
+
+        const heading = document.createElement("h2");
+        heading.textContent = comic.title || topic;
+        result.appendChild(heading);
+
+        const grid = document.createElement("div");
+        grid.style.cssText =
+            "display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:20px;";
+
+        comic.frames.forEach((frame, index) => {
+            const card = document.createElement("div");
+            card.style.cssText =
+                "padding:18px;border:2px solid #e2e8f0;border-radius:14px;background:#fff;";
+
+            const title = document.createElement("h3");
+            title.textContent = `${index + 1}-кадр`;
+
+            const scene = document.createElement("p");
+            scene.textContent = frame.scene || "";
+
+            card.append(title, scene);
+
+            (frame.dialogue || []).forEach(line => {
+                const bubble = document.createElement("div");
+                bubble.style.cssText =
+                    "background:#e0f2fe;padding:12px;border-radius:14px;margin-top:10px;";
+
+                bubble.textContent =
+                    `${line.speaker || "Кейіпкер"}: ${line.text || ""}`;
+
+                card.appendChild(bubble);
+            });
+
+            grid.appendChild(card);
+        });
+
+        result.appendChild(grid);
+
+        const conclusion = document.createElement("p");
+        conclusion.style.cssText =
+            "margin-top:20px;padding:15px;background:#dcfce7;border-radius:10px;";
+        conclusion.textContent =
+            "Қорытынды: " + (comic.conclusion || "");
+
+        result.appendChild(conclusion);
+
+        result.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    } catch (error) {
+        console.error("Комикс қатесі:", error);
+        result.textContent = "Қате: " + error.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "✦ Жасау →";
+    }
+}
+
 </script>
 </body>
 </html>
