@@ -3614,7 +3614,8 @@ if (userId && Array.isArray(comic.frames)) {
             ...comic,
             frames: comic.frames.map(frame => ({
                 ...frame,
-                image: null
+             image: null,
+storagePath: frame.storagePath || null
             }))
         }
     }
