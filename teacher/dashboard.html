@@ -3257,7 +3257,66 @@ function escapeSOS(value) {
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 }
-</script>
 
+  }
+
+// ЖАСАЛҒАН РЕСУРСТАРДЫ САҚТАУ
+function saveRecentResource(type, subject, grade, topic) {
+    const resources = JSON.parse(
+        localStorage.getItem("aiBilimRecentResources") || "[]"
+    );
+
+    resources.unshift({
+        type,
+        subject,
+        grade,
+        topic,
+        createdAt: new Date().toISOString()
+    });
+
+    localStorage.setItem(
+        "aiBilimRecentResources",
+        JSON.stringify(resources.slice(0, 20))
+    );
+
+    loadRecentResources();
+}
+
+// СОҢҒЫ РЕСУРСТАРДЫ КӨРСЕТУ
+function loadRecentResources() {
+    const container = document.getElementById("recentResources");
+    if (!container) return;
+
+    const resources = JSON.parse(
+        localStorage.getItem("aiBilimRecentResources") || "[]"
+    );
+
+    if (resources.length === 0) {
+        container.textContent = "Әзірге жасалған ресурстар жоқ.";
+        return;
+    }
+
+    container.innerHTML = "";
+
+    resources.forEach(resource => {
+        const card = document.createElement("div");
+        card.style.cssText =
+            "padding:12px;margin-bottom:10px;background:#f1f5f9;border-radius:10px;";
+
+        const title = document.createElement("strong");
+        title.textContent = `${resource.type} — ${resource.topic}`;
+
+        const details = document.createElement("div");
+        details.textContent = `${resource.subject} | ${resource.grade}-сынып`;
+        details.style.marginTop = "5px";
+
+        card.append(title, details);
+        container.appendChild(card);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", loadRecentResources);
+</script>
 </body>
 </html>
+
