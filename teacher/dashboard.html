@@ -851,7 +851,12 @@ if (type === "Деңгейлік тапсырма") {
         );
       
 // ҚМЖ-ны соңғы ресурстарға автоматты сақтау
-saveRecentResource("ҚМЖ", subject, grade, topic);
+try {
+    saveRecentResource("ҚМЖ", subject, grade, topic);
+    console.log("ҚМЖ соңғы ресурстарға сақталды");
+} catch (saveError) {
+    console.error("ҚМЖ сақтау қатесі:", saveError);
+}
     } catch (error) {
 
         console.error(error);
