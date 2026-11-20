@@ -960,7 +960,15 @@ try {
         );
       // Дайын презентацияны соңғы ресурстарға сақтау
 try {
-    saveRecentResource("Презентация", subject, grade, topic);
+   
+saveRecentResource(
+    "Презентация",
+    subject,
+    grade,
+    topic,
+    window.currentPresentation
+);
+
 } catch (saveError) {
     console.error("Ресурсты сақтау қатесі:", saveError);
 }
