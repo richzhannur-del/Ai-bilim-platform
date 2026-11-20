@@ -196,7 +196,16 @@ Suitable for grade ${grade} students.
         frame.image =
           `data:image/png;base64,${base64}`;
 
-      } catch (imageError) {
+     } catch (imageError) {
+    console.error(
+        `Комикстің ${i + 1}-кадрындағы сурет қатесі:`,
+        imageError
+    );
+
+    return res.status(500).json({
+        error: `${i + 1}-кадрдың суреті жасалмады: ${imageError.message}`
+    });
+}
         console.error(
           `${i + 1}-кадр суретінің қатесі:`,
           imageError
