@@ -1774,6 +1774,14 @@ async function createAILevelTask(
         };
 
         showLevelTaskPreview(activity);
+      
+// Деңгейлік тапсырманы соңғы ресурстарға сақтау
+try {
+    saveRecentResource("Деңгейлік тапсырма", subject, grade, topic);
+    console.log("Деңгейлік тапсырма соңғы ресурстарға сақталды");
+} catch (saveError) {
+    console.error("Ресурсты сақтау қатесі:", saveError);
+}
 
     } catch (error) {
         console.error("Level task error:", error);
