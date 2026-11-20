@@ -3570,18 +3570,12 @@ async function createAIComic(subject, grade, topic, learningObjective) {
         window.currentComic = comic;
 
       try {
-    saveRecentResource(
-        "Комикс",
-        subject,
-        grade,
-        topic,
-        {
-            subject,
-            grade,
-            topic,
-            comic
-        }
-    );
+   saveRecentResource(
+    "Комикс",
+    subject,
+    grade,
+    topic
+);
 
     console.log("Комикс соңғы ресурстарға сақталды");
 } catch (saveError) {
