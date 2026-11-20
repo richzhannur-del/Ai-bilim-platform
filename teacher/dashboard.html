@@ -3338,13 +3338,18 @@ function saveRecentResource(type, subject, grade, topic, content = null) {
         createdAt: new Date().toISOString()
     });
 
+   try {
     localStorage.setItem(
         "aiBilimRecentResources",
         JSON.stringify(resources.slice(0, 20))
     );
+} catch (error) {
+    console.warn("Браузер жады толды:", error);
+}
 
-    loadRecentResources();
-  
+loadRecentResources();
+
+   
     // Ресурсты Supabase базасына сақтау
     (async () => {
         try {
