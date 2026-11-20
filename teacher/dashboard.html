@@ -3347,13 +3347,46 @@ function saveRecentResource(type, subject, grade, topic, content = null) {
 }
 
 // СОҢҒЫ РЕСУРСТАРДЫ КӨРСЕТУ
-function loadRecentResources() {
+async function loadRecentResources() {
     const container = document.getElementById("recentResources");
     if (!container) return;
 
-    const resources = JSON.parse(
+    
+    let resources = JSON.parse(
         localStorage.getItem("aiBilimRecentResources") || "[]"
     );
+
+    try {
+        const { data: { user }, error: authError } =
+            await sb.auth.getUser();
+
+        if (authError) throw authError;
+
+        if (user) {
+            const { data, error } = await sb
+                .from("ai_resources")
+                .select("id,type,subject,grade,topic,content,created_at")
+                .eq("teacher_id", user.id)
+                .order("created_at", { ascending: false })
+                .limit(20);
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                resources = data.map(item => ({
+                    type: item.type,
+                    subject: item.subject,
+                    grade: item.grade,
+                    topic: item.topic,
+                    content: item.content,
+                    createdAt: item.created_at
+                }));
+            }
+        }
+    } catch (error) {
+        console.error("Supabase-тен оқу қатесі:", error);
+    }
+
 
     if (resources.length === 0) {
         container.textContent = "Әзірге жасалған ресурстар жоқ.";
