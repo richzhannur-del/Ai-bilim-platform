@@ -3664,7 +3664,9 @@ if (frame.image) {
         btn.textContent = "✦ Жасау →";
     }
 }
-
+window.addEventListener("pageshow", () => {
+    loadRecentResources();
+});
 </script>
 </body>
 </html>
