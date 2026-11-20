@@ -947,7 +947,11 @@ if (type === "Деңгейлік тапсырма") {
             presentation
         );
       // Дайын презентацияны соңғы ресурстарға сақтау
-saveRecentResource("Презентация", subject, grade, topic);
+try {
+    saveRecentResource("Презентация", subject, grade, topic);
+} catch (saveError) {
+    console.error("Ресурсты сақтау қатесі:", saveError);
+}
 
     } catch (error) {
 
