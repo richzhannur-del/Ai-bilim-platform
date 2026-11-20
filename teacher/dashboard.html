@@ -849,7 +849,9 @@ if (type === "Деңгейлік тапсырма") {
             learningObjective,
             qmj
         );
-
+      
+// ҚМЖ-ны соңғы ресурстарға автоматты сақтау
+saveRecentResource("ҚМЖ", subject, grade, topic);
     } catch (error) {
 
         console.error(error);
