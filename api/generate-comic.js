@@ -170,7 +170,7 @@ Suitable for grade ${grade} students.
               Authorization: `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-              model: "gpt-image-1",
+        model: "gpt-image-1.5",
               prompt: imagePrompt,
               size: "1024x1024",
               n: 1
