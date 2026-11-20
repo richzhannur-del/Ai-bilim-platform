@@ -852,8 +852,13 @@ if (type === "Деңгейлік тапсырма") {
       
 // ҚМЖ-ны соңғы ресурстарға автоматты сақтау
 try {
-    saveRecentResource("ҚМЖ", subject, grade, topic);
-    console.log("ҚМЖ соңғы ресурстарға сақталды");
+   saveRecentResource(
+    "ҚМЖ",
+    subject,
+    grade,
+    topic,
+    window.currentQMJ
+);
 } catch (saveError) {
     console.error("ҚМЖ сақтау қатесі:", saveError);
 }
@@ -3332,6 +3337,48 @@ function loadRecentResources() {
         details.style.marginTop = "5px";
 
         card.append(title, details);
+      if (resource.type === "ҚМЖ" && resource.content) {
+    const openBtn = document.createElement("button");
+
+    openBtn.type = "button";
+    openBtn.textContent = "📂 ҚМЖ-ны қайта ашу";
+
+    openBtn.style.cssText = `
+        display:block;
+        margin-top:12px;
+        padding:9px 12px;
+        background:#0f766e;
+        color:white;
+        border:none;
+        border-radius:8px;
+        cursor:pointer;
+        width:100%;
+    `;
+
+    openBtn.addEventListener("click", () => {
+        const saved = resource.content;
+
+        if (!saved || !saved.ai) {
+            alert("Бұл ҚМЖ-ның толық мазмұны сақталмаған.");
+            return;
+        }
+
+        window.currentQMJ = saved;
+
+        showAIQMJ(
+            saved.subject || resource.subject,
+            saved.grade || resource.grade,
+            saved.topic || resource.topic,
+            saved.objective || "",
+            saved.ai
+        );
+
+        document.getElementById("qmjResult")
+            .scrollIntoView({ behavior: "smooth" });
+    });
+
+    card.appendChild(openBtn);
+}
         container.appendChild(card);
     });
 }
