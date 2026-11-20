@@ -3306,6 +3306,44 @@ function saveRecentResource(type, subject, grade, topic, content = null) {
     );
 
     loadRecentResources();
+  
+    // Ресурсты Supabase базасына сақтау
+    (async () => {
+        try {
+        const client = sb;
+
+            if (!client) {
+                console.warn("Supabase клиенті табылмады");
+                return;
+            }
+
+            const { data: { user }, error: authError } =
+                await client.auth.getUser();
+
+            if (authError || !user) {
+                console.warn("Мұғалім аккаунты анықталмады");
+                return;
+            }
+
+            const { error } = await client
+                .from("ai_resources")
+                .insert({
+                    teacher_id: user.id,
+                    type: type,
+                    subject: subject,
+                    grade: String(grade),
+                    topic: topic,
+                    content: content
+                });
+
+            if (error) throw error;
+
+            console.log("Ресурс Supabase-ке сақталды");
+        } catch (error) {
+            console.error("Supabase сақтау қатесі:", error);
+        }
+    })();
+
 }
 
 // СОҢҒЫ РЕСУРСТАРДЫ КӨРСЕТУ
