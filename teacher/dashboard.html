@@ -3743,6 +3743,80 @@ if (frame.image) {
             "Қорытынды: " + (comic.conclusion || "");
 
         result.appendChild(conclusion);
+      const pdfBtn = document.createElement("button");
+pdfBtn.type = "button";
+pdfBtn.textContent = "📥 Комиксті PDF жүктеу";
+
+pdfBtn.style.cssText = `
+    display:block;
+    margin:20px 0;
+    padding:12px 20px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+`;
+
+pdfBtn.addEventListener("click", async () => {
+    if (typeof html2pdf === "undefined") {
+        alert("PDF кітапханасы жүктелмеді.");
+        return;
+    }
+
+    pdfBtn.disabled = true;
+    pdfBtn.textContent = "⏳ PDF дайындалуда...";
+
+    try {
+        const images = Array.from(result.querySelectorAll("img"));
+
+        await Promise.all(images.map(img => {
+            if (img.complete && img.naturalWidth > 0) {
+                return Promise.resolve();
+            }
+
+            return new Promise(resolve => {
+                img.addEventListener("load", resolve, { once: true });
+                img.addEventListener("error", resolve, { once: true });
+                setTimeout(resolve, 15000);
+            });
+        }));
+
+        const options = {
+            margin: 10,
+            filename: "AI-BILIM-Komiks.pdf",
+            image: {
+                type: "jpeg",
+                quality: 0.95
+            },
+            html2canvas: {
+                scale: 2,
+                useCORS: true
+            },
+            jsPDF: {
+                unit: "mm",
+                format: "a4",
+                orientation: "portrait"
+            },
+            pagebreak: {
+                mode: ["css", "legacy"],
+                avoid: ["img"]
+            }
+        };
+
+        await html2pdf().set(options).from(result).save();
+
+    } catch (error) {
+        console.error("PDF қатесі:", error);
+        alert("PDF жүктеу кезінде қате пайда болды.");
+    } finally {
+        pdfBtn.disabled = false;
+        pdfBtn.textContent = "📥 Комиксті PDF жүктеу";
+    }
+});
+
+result.appendChild(pdfBtn);
 
         result.scrollIntoView({
             behavior: "smooth",
