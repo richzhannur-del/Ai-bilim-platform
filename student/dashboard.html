@@ -580,11 +580,12 @@ if (task.due_date) {
                         padding:7px 12px;
                         border-radius:20px;
                     ">
-                        📅 ${dueDate}
-                    </span>
+                        📅         ${dueDate}
+      </span>
+    </div>
 
-                </div>
-            `;
+    ${deadlineWarning}
+  `;
 // Деңгейлік интерактивті тапсырма болса
 if (task.activity_type === "level" && task.activity_data) {
 
