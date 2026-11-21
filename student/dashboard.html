@@ -509,6 +509,36 @@ async function loadStudentAssignments() {
                 ? new Date(task.due_date)
                     .toLocaleString("kk-KZ")
                 : "Мерзімі көрсетілмеген";
+          // Тапсырманың аяқталу мерзімі туралы ескерту
+let deadlineWarning = "";
+
+if (task.due_date) {
+  const deadline = new Date(task.due_date);
+  const remainingMs = deadline.getTime() - Date.now();
+
+  if (Number.isFinite(remainingMs)) {
+    if (remainingMs <= 0) {
+      deadlineWarning = `
+        <div style="background:#fee2e2;color:#991b1b;
+          padding:12px;border-radius:10px;margin-top:12px;">
+          ⛔ Тапсырманың мерзімі аяқталды!
+        </div>`;
+    } else if (remainingMs <= 24 * 60 * 60 * 1000) {
+      deadlineWarning = `
+        <div style="background:#fee2e2;color:#991b1b;
+          padding:12px;border-radius:10px;margin-top:12px;">
+          🔔 Ертең соңғы күн! Тапсырманы орындаңыз!
+        </div>`;
+    } else if (remainingMs <= 48 * 60 * 60 * 1000) {
+      deadlineWarning = `
+        <div style="background:#fef3c7;color:#92400e;
+          padding:12px;border-radius:10px;margin-top:12px;">
+          ⏰ Мерзімнің аяқталуына 2 күн қалды!
+          Тапсырманы уақытында орындаңыз!
+        </div>`;
+    }
+  }
+}
 
             card.innerHTML = `
                 <div style="
