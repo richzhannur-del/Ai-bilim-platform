@@ -3890,6 +3890,37 @@ window.addEventListener("pageshow", () => {
     });
 
     result.appendChild(grid);
+    const downloadPdfBtn = document.createElement("button");
+downloadPdfBtn.type = "button";
+downloadPdfBtn.textContent = "📥 Комиксті PDF жүктеу";
+downloadPdfBtn.style.cssText =
+  "display:block;margin:20px 0;padding:12px 20px;background:#2563eb;color:white;border:none;border-radius:10px;cursor:pointer;font-weight:bold;";
+
+downloadPdfBtn.onclick = async () => {
+  if (typeof html2pdf === "undefined") {
+    alert("PDF кітапханасы жүктелмеді");
+    return;
+  }
+
+  downloadPdfBtn.style.display = "none";
+
+  try {
+    await html2pdf().set({
+      margin: 10,
+      filename: "AI-BILIM-Komiks.pdf",
+      image: { type: "jpeg", quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    }).from(result).save();
+  } catch (error) {
+    console.error("PDF қатесі:", error);
+    alert("PDF жасау кезінде қате шықты");
+  } finally {
+    downloadPdfBtn.style.display = "block";
+  }
+};
+
+result.appendChild(downloadPdfBtn);
 
     const conclusion = document.createElement("p");
     conclusion.style.cssText =
